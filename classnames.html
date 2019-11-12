@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>classnames</title>
+</head>
+
+<body>
+
+  <script>
+    /**
+    classnames是在react中使用时，方便类名连接使用的工具
+
+    例子：
+    classNames('foo', 'bar'); // => 'foo bar'
+    classNames('foo', { bar: true }); // => 'foo bar'
+    classNames('foo', { bar: true, duck: false }, 'baz', { quux: true }); // => 'foo bar baz quux'
+    classNames(null, false, 'bar', undefined, 0, 1, { baz: null }, ''); // => 'bar 1'
+    **/
+
+
+    function classNames(...args) {
+      let classes = []
+      for (let item of args) {
+        const itemType = Object.prototype.toString.call(item)
+        switch (itemType) {
+          case '[object Array]': {
+            let str = classnames(...item)
+            classes.push(str)
+            break;
+          }
+          case '[object Object]': {
+            for (let [key, value] of Object.entries(item)) {
+              if (value) {
+                classes.push(key)
+              }
+            }
+            break;
+          }
+          default: {
+            if (item) {
+              classes.push(item)
+            }
+          }
+
+        }
+
+      }
+      return classes.join(' ')
+    }
+    const test = classNames()
+    console.log(`'${test}'`);
+  </script>
+
+</body>
+
+</html>
