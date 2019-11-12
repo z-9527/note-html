@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+</head>
+
+<body>
+  <!-- 今天理解和掌握，call、apply、bind -->
+  <script>
+    // 'use strict';
+    Function.prototype.mybind = function (context, ...args) {
+      const fn = this
+      args = args ? args : []
+      return function(...args2){
+        return fn.call(context,...args,...args2)
+      }
+    }
+
+    Function.prototype.myapply = function (context, args) {
+      context = context || window
+      args = args || []
+      const key = Symbol()
+      context[key] = this
+      const result = context[key](...args)
+      delete context[key]
+      return result
+    }
+
+    Function.prototype.myBind = function (context, ...args) {
+      const fn = this
+      args = args ? args : []
+      return function newFn(...newFnArgs) {
+        if (this instanceof newFn) {
+          console.log(333)
+          return new fn(...args, ...newFnArgs)
+        }
+        return fn.apply(context, [...args, ...newFnArgs])
+      }
+    }
+
+    const obj = {
+      name: 'obj',
+      a: function () {
+        console.log('this', this)
+        console.log("arguments", arguments)
+      }
+    }
+
+    const a1 = obj.a.myBind(null, 1, 2, 3)
+    // console.log(a1)
+    // const a2 = new a1()
+
+    function test(){
+      console.log(this instanceof test)
+    }
+
+    test()
+
+    //如何知道一个函数是正常调用还是使用new
+
+    /**
+      call、apply、bind的异同点
+      相同点：作用都是改变函数执行的上下文(this)
+
+      f.bind(context,arg1,arg2,...)和f.call(context,arg1,arg2,...)的区别:
+      bind返回一个新的f函数，f函数的this指向context，参数列表为arg1,arg2,...
+      call返回f函数的执行结果，f函数的this指向context，参数列表为arg1,arg2,...
+
+      可以看到，bidn执行时只是对f进行了包装，并没有调用f
+      call执行时，实际上也执行了f，并且f的this已经改变
+
+      call和apply的区别：
+      唯一的区别是apply的第二个参数是一个数组。
+      apply的第二个参数不是数组或类数组时会报错（类数组比如arguments、DOM数组）
+
+    **/
+  </script>
+
+</body>
+
+</html>
