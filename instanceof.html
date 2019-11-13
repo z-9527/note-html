@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>instanceof</title>
+</head>
+
+<body>
+  <!-- 今天弄清楚instanceof的原理 -->
+  <a href="https://www.ibm.com/developerworks/cn/web/1306_jiangjj_jsinstanceof/index.html">可以参考这里</a>
+  <script>
+    /**
+      object instanceof constructor
+      instanceof 运算符用于检测构造函数的 prototype 属性是否出现在某个实例对象的原型链
+      constructor.prototype是否在object的原型链上
+    **/
+    // function Test() {}
+    // const a = new Test()
+    // console.log(1, a instanceof Test)
+    // console.log(2, a instanceof Object)
+
+    // Test.prototype = {}
+    // console.log(3, a instanceof Test)
+    // console.log(4, a.__proto__ === Test.prototype)
+    // // Test.prototype不在a的原型链上了，所以结果为false
+    // Test.prototype = Object.prototype
+    // console.log(5, a instanceof Test)
+    // console.log(6, a.__proto__.__proto__ === Test.prototype)
+    // // Test.prototype在a的原型链上，所以结果为true
+
+
+
+    function instance_of(L, R) { //L 表示左表达式，R 表示右表达式
+      let O = R.prototype; // 取 R 的显示原型
+      L = L.__proto__; // 取 L 的隐式原型
+      while (true) {
+        if (L === null)
+          return false;
+        if (O === L) // 这里重点：当 O 严格等于 L 时，返回 true 
+          return true;
+        L = L.__proto__;
+      }
+    }
+
+    // 1.Object instanceof Object
+    console.log("Object instanceof Object", Object instanceof Object)
+    console.log("instance_of(Object,Object)", instance_of(Object, Object))
+    console.log(Object.__proto__ === Object.prototype) //false
+    /**
+     为什么上面不相等，instanceof却返回true
+     Object的原型对象是什么？
+     Object.__proto__ === Object.constructor.prototype === Function.prototype
+     Function.prototype.__proto__ === Object.prototype
+     Object.__proto__.__proto__ === Object.prototype
+
+     Object、Function既是构造函数也是对象，当作为对象时，其构造函数是Function
+     Object.constructor === Funciton
+     Function.constructor === Function
+     Funciton是所有内置对象的构造函数（Object、Number...）
+    **/
+    // 2. Function instanceof Function
+    console.log("Function instanceof Function", Function instanceof Function)
+    console.log("instance_of(Function,Function)", instance_of(Function, Function))
+    console.log(Function.__proto__ === Function.prototype)
+    /**
+      Function.constructor === Function
+      Function.__proto__ === Function.constructor.prototype === Function.prototype
+    **/
+    // 3.Number instanceof Number
+    console.log("Number instanceof Number", Number instanceof Number)
+    console.log("instance_of(Number,Number)", instance_of(Number, Number))
+    /**
+      Number.__proto__ === Number.constructor.prototype 
+      Number.constructor === Function !== Number
+      Number.__proto__ !== Number.prototype
+    **/
+    // 4. function Foo() {}   Foo instanceof Function   
+    function Foo(){}
+    console.log("Foo instanceof Function", Foo instanceof Function)
+    // Foo.__proto__ === Foo.constructor.prototype === Function.prototype
+
+    console.log('aaa' instanceof String)  
+    // 注意包装类型值返回的是false
+
+   /**
+    获取对象原型的方法
+    1.__proto__
+    此方法是浏览器实现非标准获取对象原型的方法
+    2.Object.getPrototypeOf(obj)
+    此方法是ES6标准方法，获取obj对象的原型
+
+    Object.prototype.isPrototypeOf和instanceof的区别：
+    isPrototypeOf判断一个对象是否在另一个对象的原型上
+    instanceof判断一个构造函数的原型是否在另一个对象的原型上
+
+   **/
+
+  </script>
+
+</body>
+
+</html>
