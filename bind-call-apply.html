@@ -15,8 +15,8 @@
     Function.prototype.mybind = function (context, ...args) {
       const fn = this
       args = args ? args : []
-      return function(...args2){
-        return fn.call(context,...args,...args2)
+      return function (...args2) {
+        return fn.call(context, ...args, ...args2)
       }
     }
 
@@ -29,7 +29,35 @@
       delete context[key]
       return result
     }
+    Function.prototype.mycall = function (context, ...args) {
+      context = context || window
+      args = args || []
+      const key = Symbol()
+      const that = this
+      context[key] = that
+      console.log('555: ', that);
+      console.log(4444, context[key])
+      const result = context[key](...args)
+      delete context[key]
+      return result
+    }
+   
+    Function.prototype.call2 = function (context) {
+      var context = context || window;
+      context.fn = this;
 
+      var args = [];
+      for (var i = 1, len = arguments.length; i < len; i++) {
+        args.push('arguments[' + i + ']');
+      }
+
+      var result = eval('context.fn(' + args + ')');
+
+      delete context.fn
+      return result;
+    }
+
+    //考虑了new调用函数的情况
     Function.prototype.myBind = function (context, ...args) {
       const fn = this
       args = args ? args : []
@@ -50,17 +78,29 @@
       }
     }
 
-    const a1 = obj.a.myBind(null, 1, 2, 3)
+    // const a1 = obj.a.myBind(null, 1, 2, 3)
     // console.log(a1)
     // const a2 = new a1()
 
-    function test(){
-      console.log(this instanceof test)
-    }
+    const a3 = obj.a
+    a3.call2(obj)
+    // console.log(444, Object.prototype.toString.call2('123')) //会报错
+    /**
+      上面的几种方法在使用Object.prototype.toString.call2('123')时会报错
+      context = context || window
+      context[key] = this 相当于 '123'[key]  此时为undefined
+      改为context = Object(context) || window即可
+    **/
+    
 
-    test()
 
     //如何知道一个函数是正常调用还是使用new
+    function test() {
+      console.log(this instanceof test)
+    }
+    // new test()
+    // test()
+
 
     /**
       call、apply、bind的异同点
@@ -79,6 +119,7 @@
       apply的第二个参数不是数组或类数组时会报错（类数组比如arguments、DOM数组）
 
     **/
+
   </script>
 
 </body>
