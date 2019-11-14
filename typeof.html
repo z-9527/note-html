@@ -24,6 +24,8 @@
         toString对于检测原生对象很有用，但是非原生对象检测不出来，如下面的例子
 
     **/
+    console.log("typeof NaN",typeof NaN)
+    console.log("typeof new Function",typeof new Function)
     function Test(){}
     const a = new Test()
     console.log(a instanceof Test)
