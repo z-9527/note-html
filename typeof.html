@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>获取变量类型的方法</title>
+</head>
+<body>
+  <script>
+    /**
+      js获取变量类型的方法有几种：
+        1.typeof
+        2.instanceof
+        3.toString
+
+        typeof方法简单，缺点就是对于引用类型的值都是返回object，函数返回的是function
+        需要注意的几点是，typeof NaN返回的是number；typeof new Function返回的是function
+        其它new 都是返回的object
+        typeof null 返回的是object
+
+        instanceof不能检测undefined、null
+
+        toString对于检测原生对象很有用，但是非原生对象检测不出来，如下面的例子
+
+    **/
+    function Test(){}
+    const a = new Test()
+    console.log(a instanceof Test)
+    console.log(Object.prototype.toString.call(a))  //[object Object]
+  </script>
+</body>
+</html>
