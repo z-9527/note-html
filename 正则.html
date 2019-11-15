@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>正则表达式</title>
+</head>
+
+<body>
+  <!-- 今天理解和掌握正则表达式 -->
+  <a href="https://juejin.im/post/5cdcd42551882568651554e6" target="_blank">正则表达式不要背</a>
+  <br />
+  <a href="https://juejin.im/post/5965943ff265da6c30653879">JS正则表达式完整教程（略长）</a>
+  <script>
+    /**
+      正则表达式来来回回学了好多次，但是每次都放弃了，用到的时候去网上查。这次我想
+      理解和掌握正则表达式。
+
+      正则其实就是用一些符合组合来表示一些匹配规则，根据这些匹配规则我们可以查找、替换
+      更新字符串。我们要学的就是如何来编写这些规则。我们利用一些例子来学习那些规则
+
+      我们看看使用正则的一些常用方法：
+      String.prototype.match    字符串中匹配符合正则的子串  string.match(regexp)
+      String.prototype.replace   字符串中替换符合正则的子串 string.replace(regexp,newSubStr)
+      RegExp.prototype.test()    正则表达式测试字符串是否符合  regexp.test(string)
+
+    **/
+
+    function mytest(string, regexp) {
+      console.log(string.match(regexp))
+    }
+    // 1.匹配 'hello hello world'中开头的hello
+    // const string = 'hello hello world'
+    // const regexp = /^hello/
+
+    // 2.匹配正数
+    // const string = '0.1'
+    // const regexp = /^\+?(0|[1-9]\d*)(\.\d+)?$/g
+    /**
+      符号
+    **/
+
+    // 3.匹配'[object String]'中的String
+    // const string = '[object String]'
+    // const regexp = / (.*)]$/
+    // const regexp2 = /(?<= ).*(?=\]$)/
+    /**
+      方法一是匹配' '和结束']'之间的字符，不过会匹配' '和']'，实际结果是" String]"
+      我们利用分组捕获就可以获得目标串了
+      方法二同样是匹配' '和结束']'之间的字符，不过不会匹配' '和']'
+      (?<= )和(?=\]$)是匹配位置的，就像^代表开头的位置，(?=\])代表后面是]的位置
+
+      match匹配的结果和正则的g有关系，虽然都是返回的数组，但是数组内容不同
+      使用g，则返回所有符合匹配的结果（不返回捕获分组）
+      不是用g，则数组第一项是第一个完整正则匹配结果，后面依次是捕获分组
+    **/
+    // mytest('helloc loc loc f',/(lo)c/g)    
+
+    // 4.匹配24小时时间
+    // const string = '02:06'
+    // const regexp = /^([01]\d|2[0-3]):[0-5]\d$/g
+
+    // 5.匹配css的id值，<div id="container" class="main"></div> 匹配container
+    // const string = '<div id="container" class="main"></div>'
+    // const regexp = /(?<=id=").*(?=")/
+    /**
+      上面的正则匹配id="和"之间的字符
+      上面的表达式会匹配"container" class="main" 
+      *是贪婪的，会尽可能的匹配多的字符，导致一直会匹配到class的结束"
+      解决的方法可以让量词变为非贪婪（量词后加?）/(?<=id=").*?(?=")/
+      还有一种方法是 /(?<=id=")[^"]*(?=")/   这种性能更好一些
+    **/
+    // mytest('bzdsfaf',/^(?<=b)./)
+
+    // 6.数字的千位分隔符表示法 比如把"12345678"，变成"12,345,678"
+    // const string = '123456789'
+    // // const regexp = /(?=.(*{3})*$)/
+    // const regexp = /(?!^)(?=(\d{3})*$)/g
+    // console.log(string.replace(regexp, ','))
+    /**
+      思路：从字符串后面往前数，是3的倍数的位置替换成,  且不能是开头的位置
+    **/
+
+    // -------------------------分组 ---------------------
+    // 7.匹配年月日yyyy-mm-dd
+    // const string = '2019-11-16'
+    // const regexp = /(\d{4})-(\d{2})-(\d{2})/
+    // string.replace(regexp,function(...arr){
+    //   console.log(arr)
+    // })
+    // console.log(string.replace(regexp,'$2/$1/$3'))  //替换成mm/yyy/dd
+    // console.log(RegExp.$1)
+    /**
+      分组的意义除了让字符组合外更重要的是提供了让我们引用的能力
+      我们可以在js中引用，也可以在正则里引用。
+      比如上面的例子，正则没有加g，则match匹配的结果数组就可以拿到年月日，
+      数组的第一个元素是完整匹配的结果，后面依次是分组也就是年月日。
+      replace第二个参数可以传入一个函数，函数的参数列表为：
+      数组的第一个元素是完整匹配的结果，后面依次是分组也就是年月日
+      replace替换的新字符串可以插入特殊变量名如上面的$2，具体的可以参考  https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/String/replace#%E4%BD%BF%E7%94%A8%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%BD%9C%E4%B8%BA%E5%8F%82%E6%95%B0
+      构造函数的全局属性$1至$n也可以获取分组
+    **/
+
+    // 8.匹配yyyy-mm-dd、yyyy/mm/dd、yyyy.mm.dd这种格式
+    // const string = '2019-11-16'
+    // const regexp = /(\d{4}-\d{2}-\d{2})|(\d{4}\/\d{2}\/\d{2})/g
+    // const regexp2 = /\d{4}(-|\.|\/)\d{2}\1\d{2}/
+    /**
+      上面这种方法很低效，每种分隔符都要写一个分支，我们利用分组的反向引用就可以达到效果
+      我们通过\1可以拿到第一个分组，这样就保证了分隔符一致了
+      当分组嵌套时以左括号出现的顺序为准
+    **/
+
+    // 9.非捕获分组
+    // const string = 'hello 123'
+    // const regexp = /^(?:h)ell/
+    // // const regexp = /^(h)ell/
+    // mytest(string, regexp)
+    // console.log(RegExp.$1)
+    /**
+      括号都是捕获分组，方便我们引用它，有时候我们只想单纯的使用括号而不去捕获，
+      这里就可以使用非捕获分组了，可以看到两种方法的区别
+      注意RegExp.$1必须在使用正则后才能获取到
+    **/
+
+
+    // 10.将单词以大写字母开头
+    // const string = 'hello world hello word'
+    // console.log(string.replace(/(^|\s)\w/g,function(a,b,c){
+    //   return a.toLocaleUpperCase()
+    // }))
+
+    // 11.匹配成对标签  <p>laoyao bye bye</p>   <title>wrong!</p>
+    // const string = '<title>wrong!</p>'
+    // const regexp = /<([^>]*)>.*<\/\1>/
+
+
+    // mytest(string, regexp)
+
+
+    /**
+      总结：
+      我认为正则的难度有两点
+      第一点就是弄清楚要校验的规则，比如要匹配url那我们必须要知道url的
+      构造规律，如果考虑不全面就会导致有错误格式的匹配
+      第二点就是如何将文字规则通过正则的语法转换，这就要我们熟悉正则的语法了
+
+      正则的g修饰符的意义，
+      使用g，则正则会验证整个字符串，对于replace来说，如果第二个参数是函数则会多次执行
+      不使用g，正则只会返回第一个符合的结果
+
+      string.match结果、replace第二个函数的参数、RegExp.prototype.exec结果都和g有关
+      有g，数组项元素都是符合匹配的子串（不包含捕获分组）
+      没有g，数组的第一个元素是第一个符合匹配的子串，后面依次是捕获的分组和其它信息
+
+      正则里\1、\2...代表捕获的第一个分组第二个分组,如果没有捕获到，则符号代表转义后的字符
+      js里$1、$2...代表捕获的第一个分组第二个分组,如果没有捕获到，就代表'$n'字符
+      
+    **/
+  </script>
+
+</body>
+
+</html>
