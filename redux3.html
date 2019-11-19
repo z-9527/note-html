@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>redux3整理所有代码</title>
+</head>
+
+<body>
+  <script>
+    /**
+         这节将前面的代码进行整理，这里只是将redux的基本功能实现，有很多细节没
+      有去考虑,比如参数都没有校验
+    **/
+    // preloadedState参数可选
+    function createStore(reducer, preloadedState, enhancer) {
+      if (typeof preloadedState === 'function' && typeof enhancer === 'undefined') {
+        enhancer = preloadedState
+        preloadedState = undefined
+      }
+
+      if (typeof enhancer === 'function') {
+        return enhancer(createStore)(reducer, preloadedState)
+      }
+
+      let currentReducer = reducer
+      let currentState = preloadedState
+      let currentListeners = []
+
+      function getState() {
+        return currentState
+      }
+
+      function subscribe(listener) {
+        currentListeners.push(listener)
+        return function unsubscribe() {
+          const index = currentListeners.indexOf(listener)
+          currentListeners.splice(index, 1)
+        }
+      }
+
+      function replaceReducer(nextReducer) {
+        currentReducer = nextReducer
+        dispatch(Symbol())
+      }
+
+      function dispatch(action) {
+        currentState = currentReducer(currentState, action)
+        // 状态改变后再去广播
+        for (let listener of currentListeners) {
+          listener()
+        }
+        return action
+      }
+      dispatch(Symbol())
+      return {
+        getState,
+        subscribe,
+        replaceReducer,
+        dispatch
+      }
+    }
+
+    // combineReducers返回一个合成的reducer
+    function combineReducers(reducers) {
+      return function (state = {}, action) {
+        const obj = {}
+        for (let [key, value] of Object.entries(reducers)) {
+          obj[key] = value(state[key], action)
+        }
+        return obj
+      }
+    }
+    //传入的是一个列表，而不是数组
+    function applyMiddleware(...middlewares) {
+      return createStore => {
+        return (...args) => {
+          const store = createStore(...args)
+          //暴露两个API给中间件
+          const middlewareAPI = {
+            getState: store.getState,
+            dispatch: store.dispatch
+          }
+          let dispatch = store.dispatch
+          middlewares.reverse().forEach(middleware => {
+            dispatch = middleware(middlewareAPI)(dispatch)
+          })
+          return {
+            ...store,
+            dispatch
+          }
+        }
+      }
+    }
+
+    // -------------------reducer-------------------
+    function number(state = 0, action) {
+      switch (action.type) {
+        case 'ADD': {
+          return ++state;
+        }
+        case 'DECREASE':
+          return --state;
+        default:
+          return state
+      }
+    }
+
+    function todos(state = [], action) {
+      switch (action.type) {
+        case 'ADD_TODO':
+          return state.concat([action.text])
+        default:
+          return state
+      }
+    }
+
+    // --------------------中间件--------------------
+    const timer = store => next => action => {
+      console.time('time')
+      next(action)
+      console.timeEnd('time')
+    }
+    /**
+      异步thunkMiddleware，为什么需要异步中间件，异步中间件的意义在哪里？
+      我们可以在异步操作后再调用dispatch，而异步中间件的意义就是将异步操作和
+      dispatch封装在了一起，这样避免每次dispatch之前都要编写异步操作，如何实现异步中间件？
+      reducer是纯函数，我们不能在reducer中进行异步操作
+      异步操作只能放在创建action的函数中，
+      普通的action创建函数返回的是一个action对象
+      异步的action创建函数返回的是一个函数，这个函数可以调用dispatch,
+    **/
+    const thunkMiddleware = ({ dispatch, getState }) => next => action => {
+      if (typeof action === 'function') {
+        return action(dispatch, getState);
+      }
+      return next(action);
+    };
+    // --------------------创建store-------------------
+    const store = createStore(combineReducers({ number, todos }), applyMiddleware(timer, thunkMiddleware))
+    store.subscribe(() => {
+      console.log('store: ', store.getState());
+    })
+    store.dispatch({
+      type: 'ADD'
+    })
+
+    function test() {
+      return (dispatch) => {
+        setTimeout(() => {
+          dispatch({
+            type: 'ADD'
+          })
+        }, 3000)
+      }
+    }
+    store.dispatch(test())
+  </script>
+
+</body>
+
+</html>

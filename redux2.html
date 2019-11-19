@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>redux2</title>
+</head>
+
+<body>
+  <script>
+    /**
+      上节我们实现了redux的基本功能，接下来我们需要实现redux中间件了
+      中间件是什么？
+      很多框架都有中间件的概念，如koa
+      中间件顾名思义就是在中间实现一些功能
+      redux的中间件实际上是增强dispatch的功能，它提供的是位于 action 被发起之后，到达 reducer 之前的扩展点
+
+      redux中间件的特点：
+      链式组合（中间件可以调用中间件）
+      洋葱模型（执行顺序先进后出）
+
+    **/
+    //上节代码
+    function createStore(reducers, preloadedState, enhancer) {
+      let initState = preloadedState
+      let listeners = []
+
+      // if(typeof preloadedState === 'function' && typeof enhancer === "undefined"){
+      //   enhancer = preloadedState
+      //   preloadedState = undefined
+      // }
+      // if(typeof enhancer === 'function'){
+      //   return enhancer(reducers, preloadedState)
+      // }
+
+      function subscribe(listener) {
+        listeners.push(listener)
+        return function unsubscribe() {
+          const index = listeners.indexOf(listener)
+          listeners.splice(index, 1)
+        }
+      }
+
+      function getState() {
+        return initState
+      }
+
+      function replaceReducer(nextReducer) {
+        reducers = nextReducer
+        dispatch(Symbol())
+      }
+
+      function dispatch(action) {
+        initState = reducers(initState, action)
+        for (let listener of listeners) {
+          listener()
+        }
+        return action
+      }
+      dispatch(Symbol())
+      return {
+        getState,
+        subscribe,
+        replaceReducer,
+        dispatch
+      }
+    }
+
+    function combineReducers(obj) {
+      return function (state = {}, action) {
+        let reslut = {}
+        for (let [key, value] of Object.entries(obj)) {
+          reslut[key] = value(state[key], action)
+        }
+        return reslut
+      }
+    }
+
+    function number(state = 0, action) {
+      switch (action.type) {
+        case 'ADD': {
+          return ++state;
+        }
+        case 'DECREASE':
+          return --state;
+        default:
+          return state
+      }
+    }
+
+    function todos(state = [], action) {
+      switch (action.type) {
+        case 'ADD_TODO':
+          return state.concat([action.text])
+        default:
+          return state
+      }
+    }
+
+    // const a = createStore(combineReducers({
+    //   number,
+    //   todos
+    // }))
+    // console.log(a.getState())
+
+
+    /**--------------实现一个记录日志的中间件------------
+     **/
+    // const action = {type:'ADD'}
+    // console.log('action: ', action);
+    // a.dispatch(action)
+    // console.log('next state',a.getState())
+
+    //将上面封装一下
+    // function dispatchAndLog(store, action) {
+    //   console.log('dispatching', action)
+    //   store.dispatch(action)
+    //   console.log('next state', store.getState())
+    // }
+    // dispatchAndLog(a,{type:'ADD'})
+
+    /**
+      如果不嫌麻烦上面的方法也行，不过当有多个中间件时如何一起使用？
+      实际上中间件就是对dispatch进行扩展，我们编写的中间件就是对
+      dispatch进行加工，这样多个中间件分别对dispatch进行加工，然后
+      一起使用
+    **/
+
+    // function logger(store) {
+    //   const next = store.dispatch
+    //   store.dispatch = function (action) {
+    //     console.log('action: ', action);
+    //     next(action)
+    //     console.log('next state', store.getState())
+    //   }
+    // }
+
+    // function timer(store) {
+    //   const next = store.dispatch
+    //   store.dispatch = function (action) {
+    //     console.time('time')
+    //     next(action)
+    //     console.timeEnd('time')
+    //   }
+    // }
+    // logger(a)
+    // timer(a)
+    // a.dispatch({
+    //   type: 'ADD'
+    // })
+    /**
+      上面两个中间件就分别对dispatch进行了加工
+      如何实现链式调用   logger(timer(...))
+      我们可以让中间件返回一个函数，这个函数作为next，这样每个中间
+      都返回一个功能更强大的next，最后赋值给dispatch来调用
+    **/
+    // function logger(next) {
+    //   return function (action) {
+    //     console.log('action: ', action);
+    //     next(action)
+    //     console.log('next state',a.getState())
+    //   }
+    // }
+
+    // function timer(next) {
+    //   return function (action) {
+    //     console.time('time')
+    //     next(action)
+    //     console.timeEnd('time')
+    //   }
+    // }
+    // // a.dispatch = logger(timer(a.dispatch))
+    // // a.dispatch({type:'ADD'})
+    // //编写一个应用中间件的函数applyMiddleware
+    // function applyMiddleware(store,middlewares){
+    //   //数组第一项再最外层，所以这里要转换一下
+    //   middlewares.reverse()
+    //   for(let item of middlewares){
+    //     store.dispatch = item(store.dispatch)
+    //   }
+    // }
+    // applyMiddleware(a,[logger,timer])
+    // a.dispatch({type:'ADD'})
+    /**
+      上面的中间件logger使用了外面的全局变量a，中间件如何获取store，
+      我们需要将store传入到中间件中去，参数如何传递？
+      这一步很关键，为什么store不和next一起传进去，而要单独传？？？？
+      函数柯里化？？？为什么要这样做
+    **/
+    // function logger(next, store) {
+    //   return function (action) {
+    //     console.log('action: ', action);
+    //     next(action, store)
+    //     console.log('next state', store.getState())
+    //   }
+    // }
+
+    // function timer(next, store) {
+    //   return function (action) {
+    //     console.time('time')
+    //     next(action, store)
+    //     console.timeEnd('time')
+    //   }
+    // }
+    // a.dispatch = logger(timer(a.dispatch, a), a)
+    // a.dispatch({
+    //   type: 'ADD'
+    // })
+    // function applyMiddleware(store, middlewares) {
+    //   //数组第一项再最外层，所以这里要转换一下
+    //   middlewares.reverse()
+    //   for (let item of middlewares) {
+    //     store.dispatch = item(store.dispatch, store)
+    //   }
+    // }
+    // applyMiddleware(a, [logger, timer])
+    // a.dispatch({
+    //   type: 'ADD'
+    // })
+    //上面将store放在next也可以传，为什么要单独传
+
+    function logger(store) {
+      return function (next) {
+        return function (action) {
+          console.log('action: ', action);
+          next(action)
+          console.log('next state', store.getState())
+        }
+      }
+    }
+
+    function timer(store) {
+      return function (next) {
+        return function (action) {
+          console.time('time')
+          next(action)
+          console.timeEnd('time')
+        }
+      }
+    }
+    // const logger2 = logger(a)
+    // const timer2 = timer(a)
+    // a.dispatch = logger2(timer2(a.dispatch))
+    // a.dispatch({
+    //   type: 'ADD'
+    // })
+    //编写函数来使用中间件
+    // function applyMiddleware(store, middlewares) {
+    //   //只暴露一个API给中间件
+    //   const middlewareAPI = {
+    //     getState: store.getState,
+    //   }
+    //    //数组第一项再最外层，所以这里要翻转一下
+    //   middlewares.reverse()
+    //   for (let item of middlewares) {
+    //     store.dispatch = item(middlewareAPI)(store.dispatch)
+    //   }
+    // }
+    // applyMiddleware(a, [logger, timer])
+    // a.dispatch({
+    //   type: 'ADD'
+    // })
+    /**
+      上面的中间件是我们的最终版本（虽然现在还不明白为什么store要单独传）
+      我们编写了applyMiddleware来使用中间件，但是每次使用中间件都要
+      单独调用此函数，并且有可能会重复调用，我们希望在创建store的时候就应该告诉
+      store是否应用中间件，这样中间件也能保证只调用一次
+      const store = createStore(reducers, preloadedState,applyMiddleware([logger,timer]))
+      接下来我们改造createStore来达到我们的要求，之前我们先改造applyMiddleware
+      上面的applyMiddleware的作用在于改造store.dispatch
+      我们将applyMiddleware放入createStore中后，store还没有创建，我们也不能重复
+      定义dispatch函数，怎么办。applyMiddleware可以返回一个新的createStore，这个新的
+      createStore的dispatch被改造,
+    **/
+    // function applyMiddleware(middlewares, createStore) {
+    //   return function newCreateStore(...args) {
+    //     const store = createStore(...args)
+    //     // 改造store.dispatch
+    //     const middlewareAPI = {
+    //       getState: store.getState,
+    //     }
+    //     middlewares.reverse().forEach(middleware => {
+    //       store.dispatch = middleware(middlewareAPI)(store.dispatch)
+    //     })
+    //     return store
+    //   }
+    // }
+    // const a = createStore(combineReducers({
+    //   number,
+    //   todos
+    // }),applyMiddleware([logger,timer],createStore))
+    // console.log(a.getState())
+    // a.dispatch({
+    //   type:'ADD'
+    // })
+    /**
+      上面的applyMiddleware在创建store时就会改造，缺点就是每次都要传递createStore
+      redux用柯里化将createStore单独传递了
+    **/
+
+
+
+    /**  -------------------总结------------------
+      在自己从零实现简易redux的过程中，参考redux源码的同时要思考作者
+      为什么要这么写，其它方法行不行，这种写法的优势在哪里，因为作者也是
+      从零开始的，他当时为什么要这么做，如果让自己来实现这些东西能不能想出来
+
+      中间件和applyMiddleware都用了函数柯里化，本来可以一起传进去的参数
+      没有一起传进去，而是单独传，为什么要这样
+
+      目前阶段：可以勉强看懂，但是不明不白为什么要这么写，没有掌握作者的思想
+
+      下一节自己整理一下代码
+    **/
+  </script>
+
+</body>
+
+</html>

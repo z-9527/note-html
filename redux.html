@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>redux</title>
+</head>
+
+<body>
+  <!-- 今天理解redux的原理 -->
+  <a href="https://github.com/brickspert/blog/issues/22">参考这里</a>
+  <script>
+    /**
+      在react或vue中如何解决多层状态的传递？
+      1.状态提升
+      2.hook
+      3.状态管理
+
+    redux是一种状态管理的解决方案，redux认为数据是不可变的，唯一改变数据的
+    方法是通过action去触发reducer来改变数据，这样做的好处在于数据的变化更
+    可控（当然这样增加了一些额外的代码显得冗余），而vuex、mobx这类状态管理
+    是通过劫持属性的getter和setter，当数据变化时通知外界（vue3使用了proxy）
+    
+
+    redux的入门教程可以参考http://cn.redux.js.org/
+    总的来说，我们创建一个store对象，利用这个对象我们来管理状态
+    store主要有以下方法：
+      getState()
+      dispatch(action)
+      subscribe(listener)
+      replaceReducer()
+    **/
+
+    // function createStore(preloadedState){
+    //   let initStore = preloadedState || {}
+    //   let list = []
+    //   function getSta'te(){
+    //     return initStore
+    //   }
+    //   function subscribe(listener){
+    //     list.push(listener)
+    //     return function unsubscribe(){
+    //       const index = list.indexOf(listener)  //找到那一项
+    //       list.splice(index,1)
+    //     }
+    //   }
+    //   function changeStore(obj){
+    //     initStore = {...initStore,...obj}
+    //     for(let item of list){
+    //       item()
+    //     }
+    //   }
+    //   return {
+    //     getState,
+    //     subscribe,
+    //     changeStore
+    //   }
+    // }
+    // let a = createStore()
+    // const unsubscribe = a.subscribe(()=>{
+    //   console.log(666,a.getState())
+    // })
+    // a.changeStore({name:'zzh'})
+    // unsubscribe()
+    // // a.changeStore({name:'zzh'})
+    // console.log(a.getState())
+    /**
+      上面实现了一个简单的createStore，包括订阅事件、获取store功能，
+      缺点是通过changeStore可以任意改变状态，我们需要限制,
+    **/
+    function createStore(reducers, preloadedState) {
+      let initStore = preloadedState
+      let list = []
+
+      function subscribe(listener) {
+        list.push(listener)
+        return function unsubscribe() {
+          const index = list.indexOf(listener)
+          list.splice(index, 1)
+        }
+      }
+
+      function getState() {
+        return initStore
+      }
+
+      function dispatch(action) {
+        for (let item of list) {
+          item()
+        }
+        initStore = reducers(initStore, action)
+        return action
+      }
+      function replaceReducer(nextReplace){
+        reducers = nextReplace
+        dispatch(Symbol())
+      }
+      dispatch(Symbol()) //初始化initStore
+      return {
+        getState,
+        subscribe,
+        dispatch,
+        replaceReducer
+      }
+    }
+
+    function number(state = 0, action) {
+      console.log('action: ', action);
+      switch (action.type) {
+        case 'ADD': {
+          return ++state;
+        }
+        case 'DECREASE':
+          return --state;
+        default:
+          return state
+      }
+    }
+
+    // const a = createStore(number, 4)
+    // a.dispatch({
+    //   type: 'ADD'
+    // })
+    // console.log(a.getState())
+
+    function todos(state = [], action) {
+      switch (action.type) {
+        case 'ADD_TODO':
+          return state.concat([action.text])
+        default:
+          return state
+      }
+    }
+    // const b = createStore(todos)
+    // console.log('b: ', b.getState());
+
+    function todoApp(state={},action){
+      return {
+        number:number(state.number,action),
+        todos:todos(state.todos,action)
+      }
+    } 
+
+    // const c = createStore(todoApp)
+    // c.dispatch({type:'ADD_TODO'})
+    // c.dispatch({type:'ADD'})
+    // console.log(c.getState())
+
+    /**
+      上面基本已经实现了一个简单的redux，虽然函数都没有做参数校验，这里
+      demo只是演示一下基本原理，
+      接下来我们来编写redux提供的一些函数
+    **/
+
+    //上面我们手动拆分了reducer，其实redux提供了combineReducers来做上面的事情，我们实现一下这个函数
+    function combineReducers(obj){
+      return function(state={},action){
+        let reslut = {}
+        for(let [key,value] of Object.entries(obj)){
+          reslut[key] = value(state[key],action)
+        }
+        return reslut
+      }
+    }
+    // const c = createStore(combineReducers({
+    //   number,
+    //   todos
+    // }))
+    // c.dispatch({type:'ADD_TODO'})
+    // c.dispatch({type:'ADD'})
+    // console.log(c.getState())
+
+    /**
+      下一节我们来实现中间件的功能
+    **/
+
+  </script>
+
+</body>
+
+</html>
