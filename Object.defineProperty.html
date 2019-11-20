@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Object.defineProperty</title>
+</head>
+
+<body>
+  <script>
+    /**
+      Object.defineProperty是ES5的方法，其作用就是定义属性的属性
+      对象的属性是否可改变、是否可被forIn遍历、是否可删除，这些都是属性的属性
+      通过Object.getOwnPropertyDescriptor方法我们可以获取对象属性的属性
+      对象的属性有以下属性：
+      1.value:属性的值
+      2.writable:控制属性是否可修改（true为可修改）
+      3.configurable:控制属性是否可被delete (true为可删除)
+      4.enumerable:控制属性是否可被forIn遍历 (true为可遍历，原生对象的属性全部不可被遍历)
+      5.get:getter方法
+      6.set:setter方法
+    **/
+    // var obj = {};
+    // obj.key = 444
+    // console.log(obj.key)
+    // console.log(Object.getOwnPropertyDescriptor(obj, 'key'))
+    // console.log(Object.getOwnPropertyDescriptor(Object.prototype,'toString'))
+    function Archiver() {
+      var temperature = null;
+      var archive = [];
+
+      Object.defineProperty(this, 'temperature', {
+        get: function () {
+          console.log('get!');
+          return temperature;
+        },
+        //set函数有没有返回值都没有意义
+        set: function (value) {
+          temperature = value;
+          archive.push({ val: temperature });
+        }
+      });
+
+      this.getArchive = function () { return archive; };
+    }
+
+    var arc = new Archiver();
+    console.log('arc: ', arc);
+    arc.temperature; // 'get!'
+    arc.temperature = 11;
+    arc.temperature = 13;
+    arc.getArchive(); // [{ val: 11 }, { val: 13 }]
+    console.log(Object.getOwnPropertyDescriptor(arc,"temperature"))
+  </script>
+
+</body>
+
+</html>

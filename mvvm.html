@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>mvvm</title>
+</head>
+
+<body>
+  <!-- 今天理解和掌握mvvm -->
+
+  <a href="https://www.jianshu.com/p/a898ef83f38c" target="_blank">什么是 MVVM 模式？</a>
+  <br />
+  <a href="https://segmentfault.com/q/1010000000534091" target="_blank">MVVM模式下ViewModel是做什么用的？</a>
+  <br>
+  <a href="https://juejin.im/post/5abdd6f6f265da23793c4458">不好意思！耽误你的十分钟，让MVVM原理还给你</a>
+
+  <div id='app'>
+    <div>hello {{name}}</div>
+    <div>
+      <div>{{a.b}} {{ name }}</div>
+    </div>
+  </div>
+  <script>
+    /**
+      什么是mvvm？
+      以前开发网页时通常是用jquery进行dom操作将数据渲染到页面，这种
+      方式的弊端：
+      1.频繁的操作dom影响性能
+      2.太多不相关的代码和业务逻辑耦合
+
+      现代框架的优势：
+      1.虚拟DOM、diff算法提升性能
+      2.只用关注业务逻辑，数据会自动和页面关联
+      3.可以模块化组件化开发
+
+      基本大部分软件所做的功能基本就是以下两点：
+      1.从数据库读取数据展示到UI上
+      2.从UI交互获取的数据更新到数据库中
+      所以M、V分别对应数据库模型和UI界面
+
+      如何将model渲染到view上，如何将view接收的数据更新到model中？
+      · MVC派的看法是，界面上的每个变化都是一个事件，我只需要针对每个事件写一堆代码，
+        来把用户的输入转换成model里的对象就行了，这堆代码可以叫controller。
+      · 而MVVM派的看法是，我给view里面的各种控件也定义一个对应的数据对象，
+        这样，只要修改这个数据对象，view里面显示的内容就自动跟着刷新，而在view 里做了任何操作，
+        这个数据对象也跟着自动更新
+      
+      ViewModel：就是与界面（view）对应的Model。
+      因为，数据库结构往往是不能直接跟界面控件一一对应上的，
+      所以，需要再定义一个数据对象专门对应view上的控件。
+      而ViewModel的职责就是把model对象封装成可以显示和接受输入的界面数据对象。
+
+      举个例子：
+      用户列表页面，用户的基本信息可以理解为M，VM代表页面中loading、按钮状态、input的值等等
+      我们通过控制loading等状态就可以控制页面上的UI。现代框架已经自动将vm和v同步了，
+      我们需要做的只是创建vm和绑定到v上即可
+
+
+      接下来我们我们来实现一个简易的mvvm框架，难点在哪里？
+      1.如何监听数据变化
+      2.数据如何绑定到DOM上
+      3.数据变化后如何同步数据到DOM上
+      
+    **/
+    class Vue {
+      constructor(opt = {}) {
+        // 将opt放在this.$option上
+        this.$options = opt;
+        // 将data放在this._data上
+        this._data = opt.data
+
+        this.compile(document.querySelector(this.$options.el))
+
+        // 劫持属性
+        this.observe(this._data)
+
+
+        /**
+          我们将数据挂在对象的_data属性上，每次都要通过this._data.a去获取a
+          我想直接通过this.a获取a，怎么解决？
+          遍历this._data将属性全部放在this上，这种方法虽然可以在this上获取a，
+          但是设置this.a不会被观察到
+          我们可以通过代理的方法来实现上面的功能，this.a实际访问的是this._data.a
+          设置this.a实际就是设置的this._data.a，这样既能保证访问也能保证数据可被观察
+        **/
+        //代理
+        for (let [key, value] of Object.entries(this._data)) {
+          Object.defineProperty(this, key, {
+            get() {
+              return this._data[key]
+            },
+            set(newVal) {
+              this._data[key] = newVal
+            }
+          })
+        }
+        // for(let [key,value] of Object.entries(this._data)){
+        //   this[key] = value
+        // }
+      }
+      //属性劫持
+      observe(data) {
+        const that = this
+        if (!data || typeof data !== 'object') {
+          return
+        }
+        for (let [key, value] of Object.entries(data)) {
+          that.observe(value)
+          Object.defineProperty(data, key, {
+            get() {
+              return value
+            },
+            set(newVal) {
+              if (value !== newVal) {
+                that.observe(newVal)     //新设置的值也要劫持
+                value = newVal
+                console.log('newVal: ', newVal);
+              }
+            }
+          })
+        }
+      }
+      //数据编译，这里的编译只是简单的实现了变量替换，对于模板里的js语句还不支持
+      compile(node) {
+        const that = this
+        Array.from(node.childNodes).forEach(childNode => {
+          const txt = childNode.textContent
+          const reg = /\{\{(.*?)\}\}/g
+          if (reg.test(txt)) {
+            /**
+              我们将<div>{{a.b}} {{ name }}</div>中的变量a.b name替换出来
+              这里要注意两个问题，第一个是要出去前后空格，第二个是分组捕获的是字符串
+              比如获取了"a.b"，this._data['a.b']和this._data.a.b不一样
+              我们通过reduce可以累加获得
+            **/
+            childNode.textContent = txt.replace(reg, function (a, b) {
+              // console.log('a: ', a);  //a代表第一个完整匹配正则的子串
+              // console.log('b: ', b);  //b代表的第一个分组，g标志会重复调用此函数
+              const value = b.split('.').reduce((a, b) => {
+                return a[b.trim()]
+              }, that._data)
+              return value
+            })
+          }
+        })
+      }
+    }
+    const app = new Vue({
+      el: '#app',
+      data: {
+        name: 'zzh',
+        a: {
+          b: 123
+        }
+      }
+    })
+    // const data = app._data
+    const data = app    //属性代理
+    // data.a.b = {c:123}
+    // data.name = 666
+    // data.a.b.c = 2222
+    // console.log(app._data)
+    // console.log(data.name)
+    // console.log(app.$options)
+    console.log(app)
+
+    // setTimeout(()=>{
+    //   data.name = 'fdaff'
+    // },1000)
+
+  </script>
+</body>
+
+</html>

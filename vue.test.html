@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>vue-test</title>
+  <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+</head>
+<body>
+  <div id="app">{{name.split('')}}</div>
+  <div id="box1">1</div>
+  <div id="box2">2</div>
+  <script>
+    const app = new Vue({
+      el:'#app',
+      data:{
+        name:'zzh'
+      }
+    })
+    console.log(app)
+
+    const box1 = document.getElementById('box1')
+    const box2 = document.getElementById('box2')
+    box1.appendChild(box2)   //添加文档中的dom会导致原dom位置也发生变化
+  </script>
+</body>
+</html>
