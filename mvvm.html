@@ -17,7 +17,7 @@
   <br>
   <a href="https://juejin.im/post/5abdd6f6f265da23793c4458">不好意思！耽误你的十分钟，让MVVM原理还给你</a>
   <br>
-  <a href="https://www.cnblogs.com/onepixel/p/6034307.html#undefined" target="_blank">Vue.js 和 MVVM 小细节</a>
+  <a href="https://juejin.im/post/5acd0c8a6fb9a028da7cdfaf" target="_blank">面试官: 实现双向绑定Proxy比defineproperty优劣如何?</a>
   <div id='app'>
     <div>hello {{name}}</div>
     <div>
@@ -73,8 +73,6 @@
       我第一想法就是变量改变后重新调用compile函数，这里暂且不管重新调用的性能如何，
       本身这个方法就行不通，因为第一次compile后DOM中就已经没有{{}}，我第二个调用，正则时捕获不到
       变量分组的。
-
-      
     **/
     class Dep {
       constructor() {
