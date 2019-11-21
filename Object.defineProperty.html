@@ -27,32 +27,48 @@
     // console.log(obj.key)
     // console.log(Object.getOwnPropertyDescriptor(obj, 'key'))
     // console.log(Object.getOwnPropertyDescriptor(Object.prototype,'toString'))
-    function Archiver() {
-      var temperature = null;
-      var archive = [];
+    // function Archiver() {
+    //   var temperature = null;
+    //   var archive = [];
 
-      Object.defineProperty(this, 'temperature', {
-        get: function () {
-          console.log('get!');
-          return temperature;
+    //   Object.defineProperty(this, 'temperature', {
+    //     get: function () {
+    //       console.log('get!');
+    //       return temperature;
+    //     },
+    //     //set函数有没有返回值都没有意义
+    //     set: function (value) {
+    //       temperature = value;
+    //       archive.push({ val: temperature });
+    //       console.log(123,value)
+    //     }
+    //   });
+    //   this.temperature = 1111
+
+    //   this.getArchive = function () { return archive; };
+    // }
+
+    // var arc = new Archiver();
+    // console.log('arc: ', arc);
+    // arc.temperature; // 'get!'
+    // arc.temperature = 11;
+    // arc.temperature = 13;
+    // arc.getArchive(); // [{ val: 11 }, { val: 13 }]
+    // console.log(Object.getOwnPropertyDescriptor(arc,"temperature"))
+    let list = ['a','b','c']
+    for(let [key,value] of Object.entries(list)){
+      Object.defineProperty(list,key,{
+        get(){
+          console.log('get')
+          return value
         },
-        //set函数有没有返回值都没有意义
-        set: function (value) {
-          temperature = value;
-          archive.push({ val: temperature });
+        set(newVal){
+          console.log('newVal: ', newVal);
+          value = newVal
         }
-      });
-
-      this.getArchive = function () { return archive; };
+      })
     }
-
-    var arc = new Archiver();
-    console.log('arc: ', arc);
-    arc.temperature; // 'get!'
-    arc.temperature = 11;
-    arc.temperature = 13;
-    arc.getArchive(); // [{ val: 11 }, { val: 13 }]
-    console.log(Object.getOwnPropertyDescriptor(arc,"temperature"))
+    list.push(9)
   </script>
 
 </body>

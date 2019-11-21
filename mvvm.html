@@ -16,7 +16,8 @@
   <a href="https://segmentfault.com/q/1010000000534091" target="_blank">MVVM模式下ViewModel是做什么用的？</a>
   <br>
   <a href="https://juejin.im/post/5abdd6f6f265da23793c4458">不好意思！耽误你的十分钟，让MVVM原理还给你</a>
-
+  <br>
+  <a href="https://www.cnblogs.com/onepixel/p/6034307.html#undefined" target="_blank">Vue.js 和 MVVM 小细节</a>
   <div id='app'>
     <div>hello {{name}}</div>
     <div>
@@ -63,8 +64,53 @@
       1.如何监听数据变化
       2.数据如何绑定到DOM上
       3.数据变化后如何同步数据到DOM上
+
+      1.我们通过递归遍历data，用Object.defineProperty设置属性的get和set，就可以
+      监听数据了
+      2.通过在{{}}模板语法将变量绑定到了DOM上，compile函数就是解析DOM中的{{}}，遇见
+      {{}}就进行替换，
+      3.数据变化时，我们通知DOM改变即可，这里的难度在于如何来改变相应的地方，
+      我第一想法就是变量改变后重新调用compile函数，这里暂且不管重新调用的性能如何，
+      本身这个方法就行不通，因为第一次compile后DOM中就已经没有{{}}，我第二个调用，正则时捕获不到
+      变量分组的。
+
       
     **/
+    class Dep {
+      constructor() {
+        this.subs = []
+      }
+      addSub(sub) {
+        this.subs.push(sub)
+      }
+      notify() {
+        console.log('subs: ', this.subs);
+        this.subs.forEach(sub => {
+          sub.update()
+        })
+      }
+    }
+    class Watcher {
+      constructor(vm, exp, fn) {
+        this.fn = fn
+        this.vm = vm
+        this.exp = exp
+        Dep.target = this
+        //这里的作用只是为了触发被劫持对象的get
+        let val = exp.split('.').reduce((a, b) => {
+          return a[b.trim()]
+        }, vm._data)
+        Dep.target = null
+      }
+      update() {
+        //这里是获取变化的新值
+        let val = this.exp.split('.').reduce((a, b) => {
+          return a[b.trim()]
+        }, this.vm._data)
+        this.fn(val)
+      }
+    }
+
     class Vue {
       constructor(opt = {}) {
         // 将opt放在this.$option上
@@ -72,12 +118,12 @@
         // 将data放在this._data上
         this._data = opt.data
 
-        this.compile(document.querySelector(this.$options.el))
-
         // 劫持属性
         this.observe(this._data)
 
+        this.compile(document.querySelector(this.$options.el))
 
+        // this._data.name = 666
         /**
           我们将数据挂在对象的_data属性上，每次都要通过this._data.a去获取a
           我想直接通过this.a获取a，怎么解决？
@@ -107,10 +153,12 @@
         if (!data || typeof data !== 'object') {
           return
         }
+        const dep = new Dep()
         for (let [key, value] of Object.entries(data)) {
           that.observe(value)
           Object.defineProperty(data, key, {
             get() {
+              Dep.target && dep.addSub(Dep.target)
               return value
             },
             set(newVal) {
@@ -118,6 +166,7 @@
                 that.observe(newVal)     //新设置的值也要劫持
                 value = newVal
                 console.log('newVal: ', newVal);
+                dep.notify()
               }
             }
           })
@@ -136,14 +185,24 @@
               比如获取了"a.b"，this._data['a.b']和this._data.a.b不一样
               我们通过reduce可以累加获得
             **/
-            childNode.textContent = txt.replace(reg, function (a, b) {
-              // console.log('a: ', a);  //a代表第一个完整匹配正则的子串
-              // console.log('b: ', b);  //b代表的第一个分组，g标志会重复调用此函数
-              const value = b.split('.').reduce((a, b) => {
-                return a[b.trim()]
-              }, that._data)
-              return value
-            })
+            function replace() {
+              childNode.textContent = txt.replace(reg, function (a, b) {
+                // console.log('a: ', a);  //a代表第一个完整匹配正则的子串
+                // console.log('b: ', b);  //b代表的第一个分组，g标志会重复调用此函数
+
+                const value = b.split('.').reduce((a, b) => {
+                  return a[b.trim()]
+                }, that._data)
+                /**
+                  刚开始我一直在思考一个问题，当页面初始化的时候{{}}已经被替换成了对应的变量
+                  当状态再改变时我如何再去用正则更新，因为dom里已经没有{{}}了，最后我发现我第一次
+                  编译时会保存初始的内容，我每次替换是基于初始内容进行替换的
+                **/
+                new Watcher(that, b, replace)
+                return value
+              })
+            }
+            replace()
           }
         })
       }
@@ -163,14 +222,17 @@
     // data.name = 666
     // data.a.b.c = 2222
     // console.log(app._data)
-    // console.log(data.name)
     // console.log(app.$options)
-    console.log(app)
+    // console.log(app)
 
-    // setTimeout(()=>{
-    //   data.name = 'fdaff'
-    // },1000)
+    setTimeout(() => {
+      data.name = 'fdaff'
+    }, 1000)
 
+    /**
+      上面还有很多地方需要优化，很多细节没有处理，具体的可以去参考源码,这些人脑袋
+      是怎么长出来的啊，这么聪明吗
+    **/
   </script>
 </body>
 
