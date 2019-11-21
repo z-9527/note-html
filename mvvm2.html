@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>整理上节mvvm代码</title>
+</head>
+
+<body>
+  <div id="app">
+    <div>{{name}}</div>
+    <div>test {{ a.b }}</div>
+    <div>{{test}}</div>
+  </div>
+  <script>
+    class Dep {
+      constructor() {
+        this.subs = []
+      }
+      addSub(sub) {
+        this.subs.push(sub)
+      }
+      notify() {
+        this.subs.forEach(sub => {
+          sub.update()
+        })
+      }
+    }
+    class Watcher {
+      constructor(vm, key, fn) {
+        this.vm = vm
+        this.fn = fn
+        Dep.target = this
+        key.split('.').reduce((a, b) => a[b.trim()], vm._data)
+        Dep.target = null
+        this.vm
+      }
+      update() {
+        this.fn()
+      }
+    }
+    class Mvvm {
+      constructor(options) {
+        this.$options = options
+        this._data = options.data
+        this.observe(this._data)
+        this.proxy()
+        this.initComputed()
+        this.compile(document.querySelector(options.el))
+      }
+      proxy() {
+        const that = this
+        Object.keys(that._data).forEach(key => {
+          Object.defineProperty(that, key, {
+            get() {
+              return that._data[key]
+            },
+            set(newVal) {
+              that._data[key] = newVal
+            }
+          })
+        })
+      }
+      observe(data) {
+        const that = this
+        if (!data || typeof data !== 'object') {
+          return
+        }
+        const dep = new Dep()
+        for (let [key, value] of Object.entries(data)) {
+          that.observe(value)
+          Object.defineProperty(data, key, {
+            get() {
+              Dep.target && dep.addSub(Dep.target)
+              return value
+            },
+            set(newVal) {
+              // console.log('newVal: ', newVal);
+              if (newVal !== value) {
+                value = newVal
+                that.observe(newVal)
+                dep.notify()   //这句一定要在设置新值之后，否则通知的时候值还没有变化
+              }
+            }
+          })
+        }
+      }
+      compile(node) {
+        const childNodes = node.childNodes
+        const that = this
+        childNodes.forEach((n) => {
+          const txt = n.textContent
+          const reg = /\{\{(.*?)\}\}/g
+          if (reg.test(txt)) {
+            function replace() {
+              n.textContent = txt.replace(reg, (a, b) => {
+                let val = b.split('.').reduce((x, y) => x[y.trim()], that)
+                new Watcher(that, b, replace)
+                return val
+              })
+            }
+            replace()
+          }
+        })
+      }
+      initComputed() {
+        const that = this
+        Object.entries(this.$options.computed).forEach(([key, f]) => {
+          console.log('key: ', key);
+          Object.defineProperty(this, key, {
+            get() {
+              return typeof f === 'function' ? f.call(that) : f.get.call(that)
+            }
+          })
+        })
+      }
+    }
+    const app = new Mvvm({
+      el: '#app',
+      data: {
+        name: 'zzh',
+        a: {
+          b: '666'
+        }
+      },
+      computed: {
+        //实际上vue做了很多优化，比如当依赖没有变化时，值就是已经缓存的值
+        test() {
+          return this.name + this.a.b
+        }
+      }
+    })
+    // console.log(app._data.name = 111)
+    // app.a.b = { c: 111 }
+    // app.a.b.c = 1
+    setTimeout(() => {
+      app.name = "ll"
+      console.log(app)
+    }, 1000)
+    console.log(app.test)
+  </script>
+
+</body>
+
+</html>

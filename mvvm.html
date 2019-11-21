@@ -72,7 +72,9 @@
       3.数据变化时，我们通知DOM改变即可，这里的难度在于如何来改变相应的地方，
       我第一想法就是变量改变后重新调用compile函数，这里暂且不管重新调用的性能如何，
       本身这个方法就行不通，因为第一次compile后DOM中就已经没有{{}}，我第二个调用，正则时捕获不到
-      变量分组的。
+      变量分组的。这里采用了发布订阅模式，Dep作为订阅中心，管理订阅者和消息分发，
+      当data有变化时，发布消息，
+      观察者会调用update来更新内容。
     **/
     class Dep {
       constructor() {
@@ -94,7 +96,7 @@
         this.vm = vm
         this.exp = exp
         Dep.target = this
-        //这里的作用只是为了触发被劫持对象的get
+        //这里的作用只是为了触发被劫持对象的get，在get中添加订阅
         let val = exp.split('.').reduce((a, b) => {
           return a[b.trim()]
         }, vm._data)
@@ -102,10 +104,11 @@
       }
       update() {
         //这里是获取变化的新值
-        let val = this.exp.split('.').reduce((a, b) => {
-          return a[b.trim()]
-        }, this.vm._data)
-        this.fn(val)
+        // let val = this.exp.split('.').reduce((a, b) => {
+        //   return a[b.trim()]
+        // }, this.vm._data)
+        // this.fn(val)
+        this.fn()
       }
     }
 
@@ -170,7 +173,7 @@
           })
         }
       }
-      //数据编译，这里的编译只是简单的实现了变量替换，对于模板里的js语句还不支持
+      //数据编译，这里的编译只是简单的实现了变量替换，对于模板里的js表达式还不支持
       compile(node) {
         const that = this
         Array.from(node.childNodes).forEach(childNode => {
@@ -195,6 +198,8 @@
                   刚开始我一直在思考一个问题，当页面初始化的时候{{}}已经被替换成了对应的变量
                   当状态再改变时我如何再去用正则更新，因为dom里已经没有{{}}了，最后我发现我第一次
                   编译时会保存初始的内容，我每次替换是基于初始内容进行替换的
+                  我们要将观察者添加到订阅中心去，但是订阅中心是在observe中定义的，所以我们
+                  在Watcher中读取data来触发get，然后在get中添加订阅（这也太难顶了吧）
                 **/
                 new Watcher(that, b, replace)
                 return value
