@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>simple-react</title>
+</head>
+
+<body>
+  <a href="https://juejin.im/post/5db0a9876fb9a020794d8c25" target="_blank">90行代码构建属于你的React</a>
+  <div id="app"></div>
+  <script>
+    /**
+      我们编写的JSX语法实际上会被babel转换为React.createElement的形式，这
+      也是为什么有些文件没有直接使用React，也要引入React的原因，jsx是依赖React的
+
+      function App(){                        function App(){
+        return (                                return React.createElement("div", null, "hello world",....);   // children以列表的形式依次放在后面的参数中  
+          <div>hello world</div>       ==>   }
+        )
+      }
+
+      我们可以自己配置bebel转换jsx的方法，
+      React.createElement的作用实际上就是创建虚react节点，也就是虚拟dom,
+      我们再通过react-dom的render方法挂载到真实dom上去。
+      注意这里创建组件的方法有函数组件和类组件，我们在创建这些组价的虚拟DOM时，要
+      区分这两种类型并分别处理，
+
+      如何实现setState方法，
+      react和vue的区别之一就是数据变动检测，vue是通过劫持属性来监听属性变动
+      而react则是显示调用setState来触发更新，setState实际要做的就是记录差异
+      然后更新，不过对于什么时候进行更新是有差别的，react会进行优化处理
+      当在react生命周期、react事件中进行setState它会"异步"处理（合并多个setState）
+      当在setTimeout、原生事件进行setState他会"同步处理"。
+
+      什么是合成事件
+      事件本质是用户触发的某种行为，然后执行事件处理程序，
+      react利用冒泡机制将所有事件注册到document上，然后。。。
+      合成事件的优点在于统一管理事件、消除浏览器事件差异、节约内存？
+    **/
+  </script>
+</body>
+
+</html>

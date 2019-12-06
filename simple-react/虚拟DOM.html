@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>虚拟DOM和diff</title>
+</head>
+
+<body>
+  <a href="http://tech.colla.me/zh/show/why_react_tags_element_with_$$typeof">为什么React会检查element的$$typeof属性</a>
+  <a href="https://www.infoq.cn/article/react-dom-diff">深入浅出 React（四）：虚拟 DOM Diff 算法解析</a>
+  <!-- 理解和学习虚拟DOM和diff -->
+  <div id='app'>
+
+  </div>
+  <script>
+    /**
+      衡量一个算法的优劣是什么，
+      时间复杂度和空间复杂度并不是具体计算时间和空间大小的，
+      它们只是反映时间和空间随问题规模变化而变化的趋势。
+   
+      虚拟DOM实际就是DOM缓存的JS对象，当数据变化时，生成新的DOM对象，然后比较
+      前后两颗JSdom树，只对不同的地方进行dom操作，
+      问题：
+      1.如何用js对象描述DOM节点（属性、事件什么的）
+      2.如何利用js对象生成DOM
+      3.如何比较两个对象的差异，如何比较对象
+      4.如何局部更新
+
+      未完...
+    **/
+
+    class Element {
+      constructor(tagName, props, children) {
+        this.tagName = tagName
+        this.props = props
+        this.children = children
+      }
+      render() {
+        let el = document.createElement(this.tagName)
+        if (this.props && typeof this.props === 'object') {
+          for (let [key, value] of Object.entries(this.props)) {
+            el.setAttribute(key, value)
+          }
+        }
+       if(Array.isArray(this.children)){
+        this.children.forEach(child => {
+          let childEl = (child instanceof Element) ? child.render() : document.createTextNode(child)
+          el.appendChild(childEl)
+        })
+       }
+        return el
+      }
+    }
+    const app = new Element('ul', { class: 'list' }, [
+      new Element('li'),
+      new Element('li'),
+      new Element('li'),
+    ])
+    console.log(app.render())
+    document.getElementById('app').appendChild(app.render())
+  </script>
+</body>
+
+</html>
