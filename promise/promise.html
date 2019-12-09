@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>promise</title>
+</head>
+
+<body>
+  <!-- 今天手动实现promise -->
+  <a href="https://juejin.im/post/5b83cb5ae51d4538cc3ec354" target="_blank">Promise实现原理（附源码）</a>
+</body>
+<script>
+  /**
+    1.promise对象有状态值和value值（value值是状态改变时传递的值，状态只能改变一次就不可变）
+    2.then方法的作用是注册成功和失败的回调，并在状态改变时调用对应的函数
+    3.then方法返回一个新的promise对象
+    4.then可以链式调用，根据promise对象的状态来调用不同的回调
+    5.值的穿透问题
+
+    注意：
+    1.then方法不是异步调用的，在then调用时已经执行了，是它的回调函数异步调用
+    2.then方法返回一个新promise对象，promise对象的状态由then回调函数的返回值决定
+    3.promise无法取消
+    4.resolve传递的是promise对象时，外面的promise对象状态以传递的promise对象状态和value为准
+
+  **/
+  // let obj = new Promise((resolve,reject)=>{
+  //   setTimeout(()=>{
+  //     resolve()
+  //   },2000)
+  // })
+  // setTimeout(()=>{
+  //   console.time('time')
+  //   obj.then(res=>{
+  //     console.timeEnd("time")
+  //   })
+  // },3000)
+
+  /**
+   * 2s后promise状态改变为resolved，3秒后才注册then，会发现then的函数会执行，
+   * 这和事件机制不同，事件在触发事件之后注册事件处理程序是不会调用的，
+   * then方法会判断当前状态是否改变，已改变则直接调用对应的回调函数，否则注册回调函数等待调用
+  **/
+
+  // let obj = new Promise((resolve, reject) => {
+  //   // resolve()
+  //   reject()
+  // })
+  // let obj2 = obj.then(
+  //   (res) => {
+  //     console.log("obj2 success", res)
+  //     // throw Error()
+  //     // return new Promise((resolve,reject)=>{resolve()})
+  //   },
+  //   (error) => {
+  //     console.log("obj2 fail", error)
+  //     // return new Promise((resolve,reject)=>{reject()})
+  //   }
+  // )
+  // console.log('obj2: ', obj2);
+  // let obj3 = obj2.then(
+  //   (res) => {
+  //     console.log("obj3 success", res)
+  //   },
+  //   (error) => {
+  //     console.log("obj3 fail", error)
+  //   }
+  // )
+  // console.log('obj3: ', obj3);
+
+  /**
+   * 从上面的例子可以看出当then返回的promise对象状态和then的回调的返回值有关
+   * 只要回调函数中没有错误或者返回值不是promise对象，则then返回的promise对象的状态都是resolved
+   * 当then回调函数的返回值为promise对象时，then返回的promise对象状态和回调函数的promise对象状态有关
+   * 上面的例子多运行几遍就能发现规律了
+  **/
+
+  // let obj = new Promise((resolve,reject)=>{
+  //   setTimeout(()=>{
+  //     resolve(111)
+  //   },2000)
+  // })
+  // let obj2 = new Promise((resolve,reject)=>{
+  //   resolve(obj)
+  // }).then(res=>{
+  //   console.log('res: ', res);
+  // })
+  /**
+   * obj2直接resolve，但此时传递的是promise对象，所以obj2的状态和value受传入
+   * 的promise对象影响，也就是说2s后obj2的状态才变为resolved，值为111
+  **/
+
+  // let obj = new Promise((resolve,reject)=>{
+  //   // resolve(111)
+  //   reject(222)
+  // }).then().then().then(res=>{
+  //   console.log('res: ', res);
+  // },error=>{
+  //   console.log('error: ', error);
+  // })
+  /**
+   * 上面的例子可以看到值可以向后一直传递
+  **/
+
+  const obj = new Promise((resolve,reject)=>{
+    setTimeout(()=>{
+      resolve(1111)
+    },3000)
+  })
+  const obj2 = obj.finally(a=>{
+    console.log('a: ', a);
+  })
+  console.log("obj",obj2)
+
+  /**
+   * finally在promise状态改变后调用（不管是成功还是失败）
+   * finally返回新的promise对象，这个对象的状态和value和以前相同
+  **/
+</script>
+
+</html>

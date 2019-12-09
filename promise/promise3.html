@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>promise3</title>
+</head>
+
+<body>
+  <script>
+    class Promise {
+      static resolve(value) {
+        if (value instanceof Promise) return value
+        return new Promise((r) => {
+          r(value)
+        })
+      }
+      static reject(value) {
+        return new Promise((undefined, r) => {
+          r(value)
+        })
+      }
+      static all(arr) {
+        return new Promise((resolve, reject) => {
+          let list = []
+          let count = 0
+          //给每个数组成员注册成功与失败的回调函数，
+          for (let i = 0; i < arr.length; i++) {
+            Promise.resolve(arr[i]).then(res => {
+              list[i] = res
+              count++
+              if (count === arr.length) {
+                resolve(list)
+              }
+            }, err => {
+              reject(err)
+            })
+          }
+        })
+      }
+      static all(arr) {
+        return new Promise((resolve, reject) => {
+          //给每个数组成员注册状态改变的回调函数，只有有状态改变直接使用外层的resolve，reject
+          for (let item of arr) {
+            Promise.resolve(item).then(res => resolve(res), err => reject(err))
+          }
+        })
+      }
+      constructor(handle) {
+        this._status = 'pending'
+        this._value = undefined
+        this._fulfilledQueues = []
+        this._rejectedQueues = []
+
+        try {
+          setTimeout(() => {
+            handle(this._resolve.bind(this), this._reject.bind(this))
+          })
+        } catch (error) {
+          this._reject(error)
+        }
+      }
+      then(onFulfilled, onRejected) {
+        const { _status, _value } = this
+
+        onFulfilled = typeof onFulfilled === 'function' ? onFulfilled : function (a) { return a }
+        onRejected = typeof onRejected === 'function' ? onRejected : function (b) { throw b }
+
+        return new Promise((resolve, reject) => {
+          let fulfilled = value => {
+            try {
+              const res = onFulfilled(value)
+              if (res instanceof Promise) {
+                res.then(resolve, reject)
+              } else {
+                resolve(res)
+              }
+            } catch (error) {
+              reject(error)
+            }
+          }
+          let rejected = err => {
+            try {
+              const res = onRejected(err)
+              if (res instanceof Promise) {
+                res.then(resolve, reject)
+              } else {
+                resolve(res)
+              }
+            } catch (error) {
+              reject(error)
+            }
+          }
+          switch (_status) {
+            case 'resolved': {
+              fulfilled(_value)
+              break;
+            }
+            case 'rejected': {
+              rejected(_value)
+              break
+            }
+            default: {
+              this._fulfilledQueues.push(fulfilled)
+              this._rejectedQueues.push(rejected)
+            }
+          }
+        })
+      }
+      catch(handle) {
+        return this.then(undefined, handle)
+      }
+      finally(handle) {
+        // return this.then(handle, handle)  //这种写法不行，因为handle是不接收参数的，如果直接把handle放到then中会接收参数
+        // return this.then(() => handle(), () => handle())  //这种写法也不行，因为finally返回的promise对象和以前的状态value相同
+        return this.then(
+          value => Promise.resolve(handle()).then(() => value),
+          err => Promise.resolve(handle()).then(() => { throw err })
+        )
+      }
+      _resolve(value) {
+        if (this._status === 'pending') {
+          if (value instanceof Promise) {
+            value.then(this._resolve.bind(this), this._reject.bind(this))
+          } else {
+            this._status = 'resolved'
+            this._value = value
+            setTimeout(() => {
+              let cb
+              while (cb = this._fulfilledQueues.shift()) {
+                cb(value)
+              }
+            })
+          }
+        }
+      }
+      _reject(error) {
+        if (this._status === 'pending') {
+          this._status = 'rejected'
+          this._value = error
+          setTimeout(() => {
+            let cb
+            while (cb = this._rejectedQueues.shift()) {
+              cb(error)
+            }
+          })
+        }
+      }
+    }
+    // let obj = new Promise((resolve,reject)=>{
+    //   // resolve(111)
+    //   reject(222)
+    // }).then().then().then(res=>{
+    //   console.log('res: ', res);
+    // },error=>{
+    //   console.log('error: ', error);
+    // })
+    //  let obj = new Promise((resolve, reject) => {
+    //   resolve()
+    //   // reject()
+    // })
+    // let obj2 = obj.then(
+    //   (res) => {
+    //     console.log("obj2 success", res)
+    //     // throw Error()
+    //     return new Promise((resolve,reject)=>{reject()})
+    //   },
+    //   (error) => {
+    //     console.log("obj2 fail", error)
+    //     // return new Promise((resolve,reject)=>{reject()})
+    //   }
+    // )
+    // console.log('obj2: ', obj2);
+    // let obj3 = obj2.then(
+    //   (res) => {
+    //     console.log("obj3 success", res)
+    //   },
+    //   (error) => {
+    //     console.log("obj3 fail", error)
+    //   }
+    // )
+    // console.log('obj3: ', obj3);
+
+    // let obj = new Promise((resolve, reject) => {
+    //   setTimeout(() => {
+    //     // resolve(111)
+    //     reject(222)
+    //   }, 2000)
+    // })
+    // let obj2 = new Promise((resolve, reject) => {
+    //   resolve(obj)
+    // }).then(res => {
+    //   console.log('res: ', res);
+    //   return 123
+    // }, err => {
+    //   console.log('err: ', err);
+    //   return 666
+    // }
+
+    const obj = new Promise((resolve, reject) => {
+      setTimeout(() => {
+        resolve(1111)
+      }, 3000)
+    }).finally(a => {
+      console.log('a: ', a);
+    })
+    console.log("obj", obj)
+  </script>
+
+</body>
+
+</html>
