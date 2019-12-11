@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>class</title>
+</head>
+
+<body>
+  <script>
+    /**
+      js通过构造函数来创建对象，通过构造函数的原型对象来实现继承 (原型链就是实例和实例原型所组成的有序指针)
+      所以每个对象都有一个创建它的构造函数，每个函数又有一个实现继承的原型对象
+    **/
+    // function Test(){}
+    // const obj = new Test()
+    // console.log(obj.constructor)   //每个对象都有一个构造函数
+    // console.log(Test.prototype)    //每个函数都有一个原型对象
+
+    // console.log(String.constructor)  //String对象的构造函数，下同
+    // console.log(Number.constructor)
+    // console.log(Function.constructor)
+    // console.log(Object.constructor)
+
+    // console.log(Function instanceof Function)
+    // // Function的原型链上是否包含Function.prototype
+    // // console.log(Function.constructor.prototype === Function.prototype)
+    // console.log(Object instanceof Object)
+    // Object.constructor.prototype     Object.prototype
+    // console.log(Function.prototype.__proto__===Object.prototype)
+    /**
+      js中一切皆为对象，所以String既可以是对象也可以是构造函数
+      String作为构造函数时是用来生成string对象，string对象继承String.prototype
+      String作为对象时，它的构造函数是Function
+      js中所有内置对象的构造函数都是Function，Function的构造函数也是Function
+      所有对象全部继承Object.prototype
+    **/
+
+    class Test {
+      static say() {
+        console.log('静态方法say', this)
+      }
+      constructor() {
+        // console.log("new.target.name", new.target.name)
+        this.say2 = () => { console.log('实例say', this) }
+        // return {}
+      }
+      say3() { console.log('原型对象say3', this) }
+      get prop() {
+        return 'getter';
+      }
+    }
+    // const obj = new Test()
+    // console.log('obj: ', obj);
+    // console.log(obj.constructor === Test.prototype.constructor)
+    // console.log(Object.getOwnPropertyNames(Test.prototype))  
+    // console.log(Object.getOwnPropertyDescriptor(Test.prototype,'say3'))
+    // console.log(Object.getOwnPropertyNames(Test))
+    // console.log(Object.getOwnPropertyDescriptor(Test,'say'))
+    // console.log(obj.prop)
+    // Test.say()
+    /**
+      class本质还是js原型的语法糖
+      在类中所有定义的方法都是定义在原型链上的，并且方法不可枚举的（for in 不能遍历,且类的静态方法也不能枚举）
+
+      constructor是类的构造方法,和ES5一致obj.constructor === Test.prototype.constructor
+      对象实例的属性和方法定义在constructor中，若constructor中返回一个新对象，则以新对象为准
+      对象实例属性的简写可以写在最外层
+
+      static定义类的静态方法，静态方法中的this指向类而不是对象实例
+      对象实例只会继承原型链上的属性，类的静态属性不会被对象继承
+
+    **/
+
+    // new.target属性的使用，
+    //  function test(){
+    //    console.log(new.target === test)
+    //    console.log(this instanceof test)
+    //  }
+    // //  test()
+    //  const a = new test()
+    //  test.call(a)
+
+    /**
+       new.target是es6提供的一个属性，返回new命令作用于的那个构造函数
+       这个属性有什么用？
+       es5的函数既可以单独调用，也可以结合new使用，我们如何来知道函数是单独调用还是结合new使用
+       一般我们会在函数内部使用 this instanceof test 来判断
+       当test作为函数调用时test.prototype绝对不会出现在this的原型链上，因为this的值为undefined或window
+       当test和new使用时， this instanceof test成立
+       不过上面利用call来改变了this导致test没有使用new也可以使判断成立，
+       所以利用instanceof运算符来判断函数是否和new结合使用不够好
+       通过new.target就可以很简单的判断，因为new.target就是返回和new结合使用的函数名
+ 
+       在class中，这个属性好像没有什么用处，因为class只能和new一起使用，
+       不过在类的继承时，new.target返回子类，利用这个特点我们可以写出不能独立使用、必须继承后才能使用的类
+    **/
+
+    // ----------------------class的继承-----------------
+    class Test2 extends Test {
+      static hello(){
+        console.log('静态方法hello',this)
+        console.log(super.say)
+        console.log(super.say3)
+      }
+      constructor(){
+        super()
+      }
+      hello2 = ()=>{
+        console.log('实例方法hello2',this)
+        console.log(super.say2)
+        console.log(super.say3)
+      }
+      hello3(){
+        console.log('原型方法hello3',this)
+        console.log(super.say2)
+        console.log(super.say3)
+      }
+    }
+    const obj2 = new Test2()
+    // console.log('obj2: ', obj2);
+    // Test2.say()
+    // obj2.say3()
+    // Test2.hello()
+    // obj2.hello2()
+    // obj2.hello3()
+    // console.log(Test2.__proto__)
+
+    console.log(Test2.__proto__)
+    console.log(Test2.prototype.__proto__ === Test.prototype)
+    
+    /**
+      1.子类继承了父类的哪些东西
+      2.class是如何实现继承的？
+
+      子类继承了父类的实例属性、原型对象、静态属性
+      我们可以看到当Test2作为构造函数时，Test2.prototype.__proto__ === Test.prototype。这使Test2的对象实例继承了Test的原型
+      当Test2作为对象时 Test2.__proto__ === Test。这使Test2对象继承了Test对象的方法（也就是Test2的静态属性继承了Test的静态属性）
+
+      在子类中的constructor中必须调用super方法，
+      super方法相当于在子类中调用父类的constructor，以父类的constructor方法创建了子类的this，使得this能获取父类的实例属性
+
+      我们可以通过super对象获取父类的一些东西
+      当super在子类中的原型方法中使用时，super获取的是父类的原型方法，此时父类原型方法中的this指向子类对象
+      当super在子类的静态方法中使用时，super获取的是父类的静态方法，此时父类静态方法中的this指向子类
+      注意，super对象获取不到父类的实例属性
+
+      对象的属性如何获取的，首先在对象查找属性，如果没有找到，则会沿着原型链向上找，找到则返回，否则会一直查到顶端。
+
+      当函数执行时会有一个执行环境，执行环境中存在一个变量对象，此环境中的所有变量挂在变量对象上，当变量对象没有我们需要的变量时，会
+      在作用域链向外查找。
+      作用域链是在进入函数执行环境创建的，作用域链的用途，是 保证对执行环境有权访问的所有变量和函数的有序访问。作用域链的前端，始终都是当前执行的代码所 在环境的变量对象
+
+      每个函数都有自己的执行环境。当执行流进入一个函数时，函数的环境就会被推入一个环境栈中。 而在函数执行之后，栈将其环境弹出，把控制权返回给之前的执行环境。ECMAScript 程序中的执行流 正是由这个方便的机制控制着。
+
+    **/
+  </script>
+</body>
+
+</html>
