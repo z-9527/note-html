@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>高阶组件</title>
+  <script src="https://unpkg.com/react@16.9.0/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@16.12.0/umd/react-dom.development.js"></script>
+  <script src="https://cdn.staticfile.org/babel-standalone/6.26.0/babel.min.js"></script>
+</head>
+
+<body>
+  <a href="https://juejin.im/post/5c72b97de51d4545c66f75d5" target="_blank">React 中的高阶组件及其应用场景</a>
+  <div id="app"></div>
+  <script type="text/babel">
+    /**
+     * 
+     * 当项目中有很多重复代码时，这时就要思考能不能用某种方式来实现复用
+     * 
+      1.高阶组件是什么？
+        高阶组件实际上是一个函数，这个函数接收一个组件作为参数并返回新的组件
+
+
+      2.高阶组件的作用是什么？
+        高阶组件的作用就是对传入的组件进行“加工”然后返回加工后的组件。
+        所以我们看高阶组件的作用实际上就是看高阶组件如何进行加工的
+        
+        属性代理  
+        反向继承可以获取父类的state，props和render方法，我们可以控制父类的渲染
+
+      3.平常用过哪些高阶组件？
+        antd中Form.create就是一个高阶组件，通过Form.create包裹组件后，返回的新组件在props对象上就能获取form的API
+        同理react-router的withRouter也是一个高阶组件，它能使组件的props获取路由信息
+
+      4.高阶组件的缺点是什么？
+        不能传递refs（需要用React.forwardRef来获取ref)
+        组件的静态方法不能传递，需要自己复制（可以用hoist-non-react-statics来复制）
+
+      5.高阶函数的优点是什么？
+        可以将复用的逻辑抽离到高阶组件中，通过高阶组件增强组件的功能
+      
+
+
+    **/
+
+    function withTest(Component) {
+      return function (props) {
+        return <Component {...props} t='123' />
+      }
+    }
+    function withTest2(Component) {
+      return class extends React.Component {
+        state = {
+          value: ''
+        }
+        onChange = (event) => {
+          // event && event.persist()
+          this.setState({
+            value: event.target.value
+          })
+        }
+        componentDidMount() {
+          console.log(1111)
+        }
+        render() {
+          const name = {
+            value: this.state.value,
+            onChange: this.onChange
+          }
+          // console.log("this.props",this.props)   //可以看到ref是不能通过props传递的
+          return <Component {...this.props} form={{ name }} />
+        }
+      }
+    }
+    function withTest3(Component) {
+      class WithTest3 extends React.Component {
+        render() {
+          return <Component {...this.props} ref={this.props.forwardedRef} />
+        }
+      }
+      return React.forwardRef((props, ref) => <WithTest3 {...props} forwardedRef={ref} />)
+    }
+
+    function withTest4(Component) {
+      const getDisplayName = WrappedComponent => WrappedComponent.displayName || WrappedComponent.name || 'Component';
+      function WithTest4(props) {
+        return <Component {...props} />
+      }
+      //获取所有静态属性
+      const keys = Object.getOwnPropertyNames(Component)
+      keys.forEach(item => {
+        if (['name', 'length', 'prototype'].indexOf(item) === -1) {
+          // console.log(item)
+          WithTest4[item] = Component[item]
+        }
+      })
+      // WithTest4.displayName = `HOC(${getDisplayName(Component)})`
+      return WithTest4
+    }
+
+    // 反向继承，高阶返回的新组件时继承的传入组件。为什么要反向继承，直接继承react不好吗
+    // 反向继承，可以继承父类原型对象上的所有方法，也可以获取，而直接继承react是获取不到state等属性
+    function withTest5(Component) {
+      return class WithTest5 extends Component {
+        componentDidMount() {
+          super.componentDidMount()
+        }
+        render() {
+          console.log(this.state)
+          return super.render()
+        }
+      }
+    }
+
+    /**
+      withTest和withTest2都是高阶组件，
+      withTest返回的是一个函数组件
+      withTest2、withTest3返回的是一个类组件，
+      通过高阶组件我们可以加工props、state、生命周期等
+
+      这里有一点要注意：
+      const Test2 = withTest2(A)
+      <Test2 ref={el=>this.t=el} a={123}/>
+      上面的ref是获取的A组件吗？
+      不是，ref和key一样不属于props，不会传递。
+      上面的ref实际上是withTest2，
+      那高阶组件包裹后如何获取A组件呢？ 
+      React提供了forwardRef方法来传递ref
+      函数组件是没有ref的，因为函数组件没有实例
+
+      我们可以通过组件的displayName来修改在调试工具的名称
+      高阶组件并没有复制组件的静态属性，需要自己手动复制
+
+    **/
+    class A extends React.Component {
+      render() {
+        console.log(this.props)
+        const { name: { value, onChange } } = this.props.form
+        return (
+          <div>
+            <input onChange={onChange} value={value} />
+            {value}
+          </div>
+        )
+      }
+    }
+    class B extends React.Component {
+      static sayHello() {
+        alert(sayHello)
+      }
+      state = {
+        test: 'bbb'
+      }
+      componentDidMount() {
+        // console.log(333)
+      }
+      render() {
+        return (
+          <div>
+            B
+          </div>
+        )
+      }
+    }
+    const Test = withTest(A)
+    const Test2 = withTest2(A)
+    const Test3 = withTest3(B)
+    const Test4 = withTest4(B)
+    const Test5 = withTest5(B)
+
+    // console.log(666, Test4.sayHello)
+
+    class App extends React.Component {
+      render() {
+        return (
+          <div>
+            <button onClick={() => console.log(123, this.t)}>fdsaf</button>
+            <Test3 ref={el => this.t = el} a={123} />
+            <Test4 />
+            <Test5 />
+          </div>
+        )
+      }
+    }
+    ReactDOM.render(<App />, document.getElementById('app'))
+  </script>
+</body>
+
+</html>
