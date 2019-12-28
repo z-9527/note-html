@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+  <style>
+    .ellipsis {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .box {
+      display: flex;
+      width: 300px;
+      height: 100px;
+    }
+
+    .left {
+      width: 200px;
+      background-color: aquamarine;
+    }
+
+    .right {
+      /* flex: 1; */
+      /* width: 0; */
+      flex-grow: 1;
+      overflow: hidden;
+      border: 1px solid #000;
+    }
+  </style>
+</head>
+
+<body>
+  <a href="https://www.cnblogs.com/youhong/p/7481828.html">flex自适应宽度显示省略号</a>
+  <div class="box">
+    <div class="left"></div>
+    <div class="right">
+      <div class="ellipsis">fdsafafdsafasdfsadfsadfsaf</div>
+    </div>
+  </div>
+  <script>
+  /**
+    在使用flex左右布局时，有一个需求，一边固定宽度，另一边自适应。
+    文本在自适应框内显示不下时省略号
+
+    我设置了ellipsis子元素还是会把框撑开，解决方法是给父元素设置flex:1
+    然后设置width:0或overflow: hidden;
+
+    设置flex-grow: 1;overflow: hidden;会有点问题
+    flex-basis有什么作用
+  **/
+  </script>
+</body>
+
+</html>
