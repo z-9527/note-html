@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>hash</title>
+</head>
+
+<body>
+
+  <div id="nav">
+    <a href="#/page1">page1</a>
+    <a href="#/page2">page2</a>
+    <a href="#/page3">page3</a>
+    <a href="#/page4">page4</a>
+  </div>
+  <div id="container"></div>
+
+  <script>
+    /**
+      什么是前端路由？
+      早期的浏览器都是一个页面对应一个html，当用户想获得新数据时，只能
+      发起一个http请求，服务器返回一个新页面。
+      ajax的出现赋予了前端无刷新就可获取数据的能力
+      前端路由就是通过不同的url信息，然后用js渲染不同的页面，整个过程只有一个
+      html，数据是通过ajax从后端获取数据的。
+
+      如何实现前端路由？
+
+      要实现两点：
+      1.可以监听路由的变化
+      2.可以获取路由信息
+
+      要注意的两点:
+      1.url变化不会发送请求到服务端去请求url的内容
+      2.刷新页面也不会发送请求
+
+      实现的两种方式及优缺点：
+      1.hash模式
+        可以兼容低版本的浏览器
+        简单，不需要服务器配合
+        缺点是url中带有#，不好看，锚点功能丢失
+      2.HTML5的history模式
+        优点是好看，可以使用锚点功能，提供了更多的api去操作url
+        缺点是需要后端配合，兼容性等问题
+
+
+        下面介绍hash路由模式
+        hashchange事件可以监听url哈希值的变化（注意刷新页面不会触发事件）
+        location.hash可以获取当前url的hash值，
+
+        我们首先注册路由，然后在路由变化时调用对应的回调函数即可
+    **/
+
+    class HashRouter {
+      constructor() {
+        this.routers = {}
+        window.addEventListener('hashchange', this.load)
+      }
+      // 注册路由
+      register = (hash, callback = () => { }) => {
+        this.routers[hash] = callback
+      }
+      // 注册404的页面
+      register404 = (callback = () => { }) => {
+        this.routers['404'] = callback
+
+      }
+      //页面载入出错
+      registerError = (callback = () => { }) => {
+        this.routers['error'] = callback
+      }
+
+      load = () => {
+        let hash = location.hash.slice(1)
+        if (!this.routers.hasOwnProperty(hash)) {
+          hash = '404'
+        }
+
+        try {
+          this.routers[hash] && this.routers[hash]()
+        } catch (error) {
+          this.routers['error'] && this.routers['error']()
+        }
+      }
+    }
+    const router = new HashRouter()
+    const container = document.getElementById('container')
+    router.register('/', () => container.innerText = 'page1')
+    router.register('/page1', () => container.innerText = 'page1')
+    router.register('/page2', () => container.innerText = 'page2')
+    router.register('/page3', () => dsafsafa.innerfText = 'page3')
+
+    router.register404(() => container.innerText = '页面没找到')
+    router.registerError(() => container.innerText = '页面载入出错')
+
+    router.load()
+
+    /**
+      上面的例子是我们手动定义了一个container来包裹对应的视图，实际上vue的router是
+      根据router-view来匹配渲染出口的，react则直接是用router定义的位置为渲染出口
+
+      什么是渲染出口？
+      渲染出口就是视图要渲染在页面中的什么位置的简称
+    **/
+
+  </script>
+
+</body>
+
+</html>

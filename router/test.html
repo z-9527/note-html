@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>history test</title>
+</head>
+<body>
+  <button onclick="test()">查看length</button>
+  <button onclick="test2()">add state</button>
+  <script>
+    // go()、forward、back、浏览器的前进后退不会改变length
+    // pushState可以改变length，length的意义何在？没有作用？length只能增加
+    // pushState、replaceState不会触发popstate事件
+    window.addEventListener('popstate',function(e){
+      console.log('e: ', e);
+    })
+    function test(){
+      console.log(history.length)
+    }
+    function test2(){
+      history.pushState({},null)
+    }
+  </script>
+  
+</body>
+</html>

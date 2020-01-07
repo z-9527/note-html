@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>history</title>
+</head>
+
+<body>
+  <a href="/page1">page1</a>
+  <a href="/page2">page2</a>
+  <a href="/page3">page3</a>
+  <a href="/page4">page4</a>
+  <button id='btn' onclick="go()">go page1</button>
+  <div id="container">
+
+  </div>
+
+  <script>
+    /**
+      通过popstate事件监听浏览器的前进后退，监听历史栈变化
+      通过history的go、back、forward控制路由
+      通过pushState、replaceState向历史栈中添加、替换state
+      popstate不能监听pushState、replaceState
+    **/
+
+
+
+    class HistoryRouter {
+      constructor() {
+        this.routers = {}
+
+        window.addEventListener('click', (event) => {
+          const target = event.target
+          if (target.tagName === 'A') {
+            this.assign(target.pathname)
+            event.preventDefault()
+          }
+        })
+        window.addEventListener('popstate', (event) => {
+          console.log(location.pathname)
+          this.load(event.state.path)
+        })
+      }
+      assign = (path) => {
+        history.pushState({ path }, null, path)
+        this.load(path)
+      }
+      load = (path) => {
+        if (!this.routers.hasOwnProperty(path)) {
+          path = '404'
+        }
+        try {
+          this.routers[path] && this.routers[path]()
+        } catch (error) {
+          this.routers['error'] && this.routers['error']()
+        }
+      }
+
+      // 注册路由
+      register = (hash, callback = () => { }) => {
+        this.routers[hash] = callback
+      }
+      // 注册404的页面
+      register404 = (callback = () => { }) => {
+        this.routers['404'] = callback
+
+      }
+      //页面载入出错
+      registerError = (callback = () => { }) => {
+        this.routers['error'] = callback
+      }
+    }
+
+    const router = new HistoryRouter()
+
+    router.register('/', () => container.innerText = 'page1')
+    router.register('/page1', () => container.innerText = 'page1')
+    router.register('/page2', () => container.innerText = 'page2')
+    router.register('/page3', () => dsafsafa.innerfText = 'page3')
+
+    router.register404(() => container.innerText = '页面没找到')
+    router.registerError(() => container.innerText = '页面载入出错')
+
+    router.load(location.pathname)
+
+    function go(){
+      router.assign('/page1')
+    }
+
+
+  </script>
+
+</body>
+
+</html>
