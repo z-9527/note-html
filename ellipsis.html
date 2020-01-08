@@ -31,16 +31,31 @@
       overflow: hidden;
       border: 1px solid #000;
     }
+
+    .multiple-rows{
+      width: 200px;
+      display: -webkit-box;
+	    overflow: hidden;
+	    -webkit-line-clamp: 2;
+	    -webkit-box-orient: vertical;
+      border: 1px solid #000;
+    }
+
   </style>
 </head>
 
 <body>
   <a href="https://www.cnblogs.com/youhong/p/7481828.html">flex自适应宽度显示省略号</a>
+  <a href="https://juejin.im/post/5dc15b35f265da4d432a3d10">文本省略号</a>
   <div class="box">
     <div class="left"></div>
     <div class="right">
       <div class="ellipsis">fdsafafdsafasdfsadfsadfsaf</div>
     </div>
+  </div>
+  <h3>多行文本超出后省略号</h3>
+  <div class="multiple-rows">
+    lfdksalfkjlsdakfjlsakjdflaskdjflksajdflksajd发来大家立方空间两颗精神分裂卡萨记录反馈家里看风景拉斯开飞机
   </div>
   <script>
   /**
