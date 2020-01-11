@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>ref转发</title>
+  <script src="https://unpkg.com/react@16/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@16/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+  <style>
+    input {
+      border: 1px solid #000;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="app"></div>
+  <script type="text/babel">
+    /**
+
+    上一章中我们讲到，
+    class组件上使用ref获取的是组件本身，函数式组件上没有ref，
+
+    有时我们想获取组件中某个dom的ref怎么办？
+
+    在16.3版本以前，我们可以通过props将父组件的属性传递进去，然后在子组件中获取ref传递给父组件
+    传递给父组件的方法有很多
+
+  **/
+
+    function Test(props){
+      return (
+        <div>
+          <input type="text" className='child' ref={props.child}/>
+          <input type="text" className='child2' ref={props.child2}/>
+        </div>
+      )
+    }
+
+    class Test2 extends React.Component{
+      constructor(props){
+        super(props)
+        this.child4 = React.createRef()
+      } 
+
+      getChild4 = ()=>{
+        return this.child4
+      }
+
+      render(){
+        return (
+          <div>
+            <input type="text" className='child3' ref={this.props.child3}/>
+            <input type="text" className='child4' ref={this.child4}/>
+          </div>
+        )
+      }
+    }
+
+
+    class App extends React.Component{
+      constructor(props){
+        super(props)
+        this.child2 = React.createRef()
+      }
+      render(){
+        return (
+          <div>
+            <Test child={ el => this.child = el } child2={this.child2}/>
+            <Test2 child3={el => this.child3 =el } ref={el => this.child4 = el.getChild4()}/>
+            <button onClick={()=>console.log(this)}>click</button>
+          </div>
+        )
+      }
+    }
+
+    ReactDOM.render(<App/>,document.getElementById('app'))
+  
+  </script>
+
+</body>
+
+</html>
