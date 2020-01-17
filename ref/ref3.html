@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>ref转发</title>
+  <script src="https://unpkg.com/react@16/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@16/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+  <style>
+    input {
+      border: 1px solid #000;
+    }
+  </style>
+</head>
+
+<body>
+  <a href="https://react.docschina.org/docs/forwarding-refs.html#forwarding-refs-in-higher-order-components">ref转发</a>
+  <div id="app"></div>
+  <script type="text/babel">
+  /**
+    如何获取组件中的ref？
+
+    上一章中，我们通过自定义的props传递到子组件中，然后子组件将其内部的ref传递给父组件。
+    16.3以后的办法提供了转发ref的功能
+
+    ref和key一样都是特殊处理，所以ref和key不会被传递下去，这导致高组件组件包裹的组件会丢失自己的ref。
+
+    我们使用React.forwardRef后，ref就可以转发下去了，因为forwardRef函数的第二个参数接收ref。
+    在组件内部我们可以将内部的ref放到外面传进来的ref上。
+
+    转发功能使得高阶组件可以更方便的传递ref了
+
+  **/
+
+    function Test(props){
+      return (
+        <div>
+          <input type="text" ref={props.myRef}/>
+        </div>
+      )
+    }
+
+    const  Test2 = React.forwardRef((props,ref)=><Test {...props} myRef={ref}/>)
+
+
+
+
+    class App extends React.Component{
+      constructor(props){
+        super(props)
+        this.test = React.createRef()
+      }
+      render(){
+        return (
+          <div>
+            <Test2 ref={this.test}/>
+            <Test2 ref={el=>this.test2=el}/>
+            <button onClick={()=>console.log(this)}>打印ref</button>
+          </div>
+        )
+      }
+    }
+
+    ReactDOM.render(<App/>,document.getElementById('app'))
+  
+  </script>
+
+</body>
+
+</html>

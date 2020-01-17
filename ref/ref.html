@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>ref</title>
+  <script src="https://unpkg.com/react@16/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@16/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+  <style>
+    input{
+      border: 1px solid #000;
+    }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+  <a href="https://zhuanlan.zhihu.com/p/40462264">React ref 的前世今生</a>
+  <script type="text/babel">
+    /**
+
+      ref的意义是什么？
+      1.我们编写的都是react元素，react元素其实就是虚拟的DOM，有时我们需要使用原生DOM的方法
+        比如获取焦点，dom元素滚动、动画等等，ref可以让我们拿到dom元素
+      2.获取组件的引用，我们就可以使用组件上的一些方法，比如父组件调用子组件的方法
+
+      
+      
+      ref使用的三种方法：
+      1.字符串
+      2.回调函数
+      3.React.createRef()
+
+      16.3版本后的react推荐用第三种方式，注意函数式组件没有ref,不过函数式组件内部可以使用回调函数和createRef
+
+      回调函数和createRef都是在React元素渲染为真实DOM元素时将dom传递。
+
+      ref使用的位置不同，得到的结果也不同。
+      当ref挂在普通的标签元素上时最后得到的时真实的DOM元素
+      当ref挂在class组件时（函数式组件没有ref，但是内部可以使用），得到的是class组件
+
+
+    **/
+
+    function Test(){
+      let input1 = null
+      const input2 = React.createRef()
+
+      function show(){
+        console.log('input1: ', input1);
+        console.log('input2: ', input2);
+      }
+      return (
+        <div>
+          <input type="text" className='input1' ref={el=>input1=el}/>
+          <input type="text" className='input2' ref={input2}/>
+          <button onClick={show}>打印ref</button>
+        </div>
+      )
+    }
+
+    class Test2 extends React.Component{
+      render(){
+        return (
+          <div>
+            我是test2
+          </div>
+        )
+      }
+    }
+
+    class App extends React.Component{
+      constructor(props){
+        super(props)
+
+        this.test = React.createRef()   //可以看到函数式组件的current为null
+        this.test2 = React.createRef()  // class组件的current的class组件本身
+      }
+
+      render(){
+        return (
+          <div>
+            <Test ref={this.test}/>
+            <Test2 ref={this.test2}/>
+            <button onClick={()=>console.log(this)}>打印Test的ref</button>
+          </div>
+        )
+      }
+    }
+
+
+
+
+    ReactDOM.render(<App/>,document.getElementById('app'))
+
+  </script>
+  
+</body>
+</html>
