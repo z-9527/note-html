@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>事件捕获和事件冒泡</title>
+  <style>
+    #outer {
+      width: 500px;
+      height: 500px;
+      border: 1px solid #000;
+    }
+
+    #inner {
+      width: 200px;
+      height: 200px;
+      border: 1px solid #000;
+    }
+  </style>
+</head>
+
+<body>
+  <div id='outer'>
+    <div id='inner'></div>
+  </div>
+
+  <script>
+    /**
+      什么是事件捕获和事件冒泡
+
+      当有嵌套元素同时注册了同一种事件，那用户触发时，是外层元素
+      先触发还是内层元素先触发
+
+      ie给出的解决方案是事件都是由内向外传播（事件冒泡），即内层元素先触发，然后外层元素再触发
+      Netscape给出的解决方案是事件都是由外向内传播（事件捕获），即外层元素先触发，然后内层元素再触发
+
+      w3c标准为了兼容两家公司的处理方式，提出了事件流机制：
+      事件由外层捕获到内层，然后内层再冒泡到外层，默认事件在冒泡阶段触发
+
+      addEventListener的第三个参数可配置事件触发的时机
+      target.addEventListener(type, listener, useCapture)
+      target.addEventListener(type, listener, options);
+      options{
+        capture,
+        once
+        passive
+      }
+
+      事件委托：
+      利用事件冒泡的机制我们可以将事件代理到最外层元素，然后通过event.target判断触发事件的元素，调用对应的处理程序
+
+      事件委托优点：
+      1.减少了事件绑定的次数
+      2.动态添加的dom无须注册事件
+
+      事件委托的缺点：
+      1.并不是所有事件都支持事件冒泡
+      2.如果冒泡曾经过多，可能会被某层阻断
+
+
+    **/
+    const outer = document.getElementById('outer')
+    const inner = document.getElementById('inner')
+
+    outer.addEventListener('click', function () {
+      console.log('outer')
+    },true)
+    inner.addEventListener('click', function () {
+      console.log('inner')
+    })
+
+  </script>
+
+</body>
+
+</html>
