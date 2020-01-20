@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>IntersectionObserver</title>
+  <style>
+    * {
+      padding: 0;
+      margin: 0;
+    }
+
+    .box {
+      height: 1600px;
+      width: 200px;
+      background-color: skyblue;
+    }
+
+    img {
+      width: 100px;
+      height: 100px;
+    }
+    .warp{
+      width: 100%;
+      height: 500px;
+      border: 1px solid #000;
+      overflow: auto;
+      box-sizing: border-box;
+      /* padding: 10px; */
+    }
+  </style>
+</head>
+
+<body>
+  <div class="warp">
+    <div class="box"></div>
+    <img id='img' src="https://gw.alipayobjects.com/zos/rmsportal/hfFgCpcxpGjeAlXFFgyT.png" alt="">
+    <img id='img2' data-b data-ZZZ-aaa test TestAbc src="https://gw.alipayobjects.com/zos/rmsportal/hfFgCpcxpGjeAlXFFgyT.png" alt="">
+    <div class="box"></div>
+  </div>
+  <script>
+    /**
+      如何判断元素是否出现在视口中？
+
+      传统的方法是监听页面滚动，然后在滚动事件处理程序中计算元素是否出现在视口中
+      这种方法的弊端是滚动事件太频繁，事件处理程序过于复杂时会造成页面卡顿
+
+      HTML5提供了一个新的API来解决上面的问题
+
+      IntersectionObserver的逻辑是目标元素是否出现在根元素的视口中，然后调用回调函数。
+      这种方法的好处就是避免了频繁的计算
+
+      下面就介绍IntersectionObserver如何使用。
+
+      首先创建观察者对象，传入callback和options，然后调用观察者对象去监听需要观察的DOM元素。
+      options{
+        root:指定根元素，默认为浏览器窗口
+        rootMargin：指定视口伸缩大小，默认为root视口大小
+        threshold:目标元素出现在根元素视口多少时触发回调函数，这里是百分比
+                  默认是0，也就是说目标元素刚出现在根元素视口就会触发回调，也可以是数组
+      }
+      回调函数的触发条件是目标元素和根元素相交区域大于或小于阈值时触发，而不是目标元素在根元素视口相交区域大小变化时触发（初始化时也会触发一次回调函数）
+      
+      回调函数接收两个参数entries, observer。
+      entries是进入/离开视口的 IntersectionObserverEntry对象 列表
+      IntersectionObserverEntry对象包含的属性(省略部分属性)
+      {
+        rootBounds:描述根元素的矩形信息
+        boundingClientRect：描述目标元素的矩形信息，计算方法和getBoundingClientRect相同
+        intersectionRect：交叉矩形信息
+        isIntersecting:目标元素是否在视口中
+        intersectionRatio:目标元素在视口中的百分比
+        target:目标元素
+      }
+
+      第二个参数observer是观察者对象
+
+      使用此API时要注意浏览器兼容问题
+  
+    **/
+    const img = document.getElementById('img')
+    const img2 = document.getElementById('img2')
+    const observer = new IntersectionObserver(function (entries, observer) {
+      console.log('observer: ', observer);
+      console.log('entries: ', entries); //观察者列表
+    },{
+      // root:document.body
+      root:document.getElementsByClassName('warp')[0],
+      // rootMargin:'-100px',
+      threshold:1
+    })
+    observer.observe(img)
+    observer.observe(img2)
+    // console.log(document.getElementsByClassName('warp')[0].getBoundingClientRect())
+    // console.dir(img2)
+  </script>
+</body>
+
+</html>
