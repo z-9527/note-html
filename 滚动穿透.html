@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>滚动穿透问题</title>
+  <style>
+    .wrapper {
+      height: 1500px;
+    }
+
+    .anchor {
+      height: 500px;
+    }
+
+    .dialog {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      width: 200px;
+      height: 200px;
+      background-color: aqua;
+      transform: translate3d(-50%, -50%, 0);
+      overflow: auto;
+      display: none;
+    }
+
+    .box {
+      width: 100px;
+      height: 500px;
+      background-color: orange;
+    }
+
+    .btns {
+      position: fixed;
+      bottom: 20px;
+      width: 100%;
+      text-align: center;
+    }
+
+    .btns button {
+      border: 1px solid #ddd;
+      outline: none;
+    }
+
+
+    ::-webkit-scrollbar {
+      width: 10px;
+    }
+
+    /* 滚动槽 */
+    ::-webkit-scrollbar-track {
+      -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
+      border-radius: 10px;
+    }
+
+    /* 滚动条滑块 */
+    ::-webkit-scrollbar-thumb {
+      border-radius: 10px;
+      background: #bbb;
+      -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.5);
+    }
+
+    ::-webkit-scrollbar-thumb:window-inactive {
+      background: rgba(255, 0, 0, 0.4);
+    }
+
+    /* .test{
+      height: 100vh;
+      overflow: auto;
+    } */
+  </style>
+</head>
+
+<body>
+  <div class="btns">
+    <button class="open-btn" onclick="onOpen()">打开弹框</button>
+    <button class="close-btn" onclick="onClose()">关闭弹框</button>
+  </div>
+  <!-- <div class="test"> -->
+  <div class="wrapper">
+    <div class="anchor">锚点1</div>
+    <div class="anchor">锚点2</div>
+    <div class="anchor">锚点3</div>
+
+    <div class="dialog">
+      <div class="box"></div>
+    </div>
+    <!-- </div> -->
+  </div>
+
+  <script>
+    /**
+     *  滚动穿透问题
+     *  描述：当弹出层有滚动时，弹出层滚动会影响底底层跟着滚动
+     *  特点：1.穿透的滚动只影响body或html的滚动，祖先div不影响
+     *       2.滚动只有在弹出层滚动不动时才会穿透。比如弹出层滚动到顶部时，此时再向上滚动才会穿透出去
+     *
+     *  解决方案：
+     *  网上方案很多，我这里就只举例出几个
+     *  1.在弹出层弹出时，设置body样式overflow:hidden,关闭时再还原。如果是pc端这种方法就可以了
+     *    优点：简单   缺点：移动端真机上有的不起作用（我也没试过，网上这么说的）
+     *  2.在弹出层,设置body样式position:fixed,关闭时再还原。
+     *    优点：简单  缺点：body的滚动位置丢失，因为一设置fixed就默认top为0，需要自己在打开和关闭时设置滚动条位置
+     *  3.由滚动穿透特点，我们可以在弹出层到顶时，禁止再向上滚动，弹出层到底部时，禁止再向下滚动
+     * */
+
+
+    const dialog = document.getElementsByClassName('dialog')[0]
+    const body = document.body
+    function onOpen() {
+      dialog.style.display = 'block'
+
+      // body.style.overflow = 'hidden'
+
+      // const scrollTop = document.body.scrollTop || document.documentElement.scrollTop
+      // body.style.position = 'fixed'
+      // body.style.top = `-${scrollTop}px`
+    }
+
+    function onClose() {
+      dialog.style.display = 'none'
+
+      // body.style.overflow = 'auto'
+
+      // const scrollTop = -parseInt(body.style.top)
+      // body.style.position = 'static'
+      // body.style.top = ''
+      // document.body.scrollTop = document.documentElement.scrollTop = scrollTop
+
+    }
+
+
+    dialog.addEventListener('touchstart', onTouchStart)
+    dialog.addEventListener('touchmove', onTouchMove)
+    dialog.addEventListener('touchend', onTouchEnd)
+    let touch = null
+    function onTouchStart(e) {
+      const touches = e.touches[0]
+      touch = {
+        startX: touches.clientX,
+        startY: touches.clientY
+      }
+    }
+    function onTouchMove(e) {
+      if (!touch) {
+        return
+      }
+      const touches = e.touches[0]
+      const { scrollTop, offsetHeight, scrollHeight } = e.currentTarget
+      const dx = touches.clientX - touch.startX
+      const dy = touches.clientY - touch.startY
+      const isVertical = Math.abs(dx) < Math.abs(dy)  //判断是否是在垂直滚动
+      const direction = dy > 0 ? 'up' : 'down' // 判断当前滑动方向,
+
+      //滑动到顶部禁止再上滑
+      if (scrollTop === 0 && direction === 'up') {
+        e.cancelable && e.preventDefault()
+      } else if (scrollTop + offsetHeight >= scrollHeight && direction === 'down') {
+        e.cancelable && e.preventDefault()
+      }
+    }
+    function onTouchEnd() {
+      touch = null
+    }
+
+
+  </script>
+
+</body>
+
+</html>
