@@ -49,7 +49,7 @@
       1.通过getBoundingClientRect获取img的top，然后判断top是否在视口中
       优点：兼容性还不错
       缺点：这种方式的局限性是以window为视口的，如果一个滚动的div中包含很多图片，这种计算方式就有问题，需要使用scrollTop，offsetHeight
-            scrollHeight来计算是否出现视口，并且还要在div上绑定滚动事件,写成组件时要向上查找滚动父元素然后给它绑定滚动事件
+            scrollHeight来计算是否出现视口，并且还要在div上绑定滚动事件,写成组件时要向上查找滚动父元素然后给它绑定滚动事件(https://github.com/Pines-Cheng/blog/issues/36)
 
       2.使用IntersectionObserver来监听img是否出现在视口中，当img出现在视口中会调用回调函数
       优点：简单，而且滚动的div中img也起作用
