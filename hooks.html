@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+
+<body>
+  <script>
+    /**
+     * hooks 官方文档 https://react.docschina.org/docs/hooks-reference.html
+     * 1.为什么要使用hooks，优点在哪里
+     * 2.自己常用的hooks和几个hooks的区别 
+     * 
+     * https://codesandbox.io/s/hooks-9yk6s
+     * 
+     * 1.hooks的出现大大推进了react的函数式编程（什么是函数式编程），赋予了函数组件相对于类组件以前没有的能力，比如state能力
+     * class组件通过生命周期钩子函数来处理一些副作用，比如网络请求。当业务比较复杂时，这些生命周期中的逻辑就变得复杂。
+     * hooks弱化了生命周期的概念，提供了许多hooks函数，我们只需要在合适的地方调用合适的函数即可。另外hooks的复用性比类组件更加清晰
+     * 业务中一个常见的需求上面是搜索表单，下面是结果表格。以前我们用class组件时，需要定义许多个state，碰到表格分页时可能还需要写更多逻辑
+     * 当这种表单页很多时，需要在每个页面都重复写一遍，无法复用（页面接口、表单字段都不同），然而hooks提供了函数state的功能，这样我们可以把将分页查询逻辑提出去
+     * const {table,form} = useFormTable(services,config)
+     * 传入接口请求函数，返回封装好的一些状态form和table，如loading，分页函数，等等。这样就实现了一个form和table联动的封装
+     * 
+     * 
+     * 2.useState,useRef,useEffect,useCallback,useMemo,useImperativeHandle
+     * 这里我记录一下我对上面几个hooks的使用
+     * - useState不用多说
+     * - useRef主要是获取DOM或者实现类似class组件实例变量的功能，函数式组件每次重新调用都会重新初始化普通变量，而useRef会在组件的整个生命周期中保持不变
+     * - useEffect组件主要提供了执行副作用的功能，它会在依赖项变化的时候执行。有多个副作用也可以写多个useEffect，这样更清晰。
+     *   我们可以将通用的副作用提出去，就可以实现代码的复用。比如我在业务中遇到多个页面都需要请求一个接口。我们就自定义一个hooks，然后直接在页面中使用
+     *   const data = useGetData()   // useGetData是我们自己定义的hooks，
+     * - useCallback 主要是做一些优化，需要配合React.memo使用，useCallback(fn, deps) 相当于 useMemo(() => fn, deps)。
+     * 
+     * - useEffect、useCallback、useMemo的区别
+     *   首先它们有些相似点，参数都是一个函数和一个依赖数组，但是它们的作用却不相同
+     *   useEffect传递一个函数和依赖数组，当数组中的值变化时会在DOM重新渲染后调用传递的函数，我们可以利用这个函数来执行一些副作用，如网络请求等。
+     *   useCallback是做一些优化用的。const memoizedCallback = useCallback(fn, deps)，useCallback会返回一个函数（memoizedCallback），这个函数是传递参数的缓存版本，当依赖数组不变时，memoizedCallback的引用都是同一个值。这个意义在于，当我们将
+     *   这个memoizedCallback当作props传递给组件时，不会重新触发组件渲染（当然组件必须是React.memo或类似优化的组件，这样props相同时才不会重新渲染）
+     *   useMemo和useCallback类似，他们的不同之处在于useMemo返回的是参数函数的返回值，只有当依赖数组变化时才会重新计算缓存值，它可以实现useCallback的功能，也可以实现更多的功能，
+     *   useCallback返回的是一个函数，而useMemo可以返回任意类型的值，useMemo(() => any, deps)，这在计算量大的函数中使用，会有优化的效果，当依赖变化时才重新计算。
+     * 
+     *   - useImperativeHandle
+     *    思考一个问题，如果获取函数组件的方法或者函数组件中的变量，
+     *    在class组件中，我们通过ref可以拿到class组件，然后直接可以使用class组件方法，但是在函数组件中，我们不能直接拿到它的ref
+     *    虽然可以通过React.forwardRef可以将ref转发到函数组件中，但函数组件中也只能是将ref赋值给DOM元素，这样外面也只能获取
+     *    函数组件的DOM元素，如何拿到函数组件的方法呢？https://codesandbox.io/s/useimperativehandleheforwardref-2eh28
+     *    useImperativeHandle(ref, createHandle, [deps])
+     *    useImperativeHandle将createHandle的返回值挂在了ref上，createHandle只要返回我们需要的值，外面的就可以拿到
+     *    获取函数组件中方法的意义有什么？
+     *    当父组件需要获取子组件中的值时，我们一般通过状态提升，将状态放在父组件中维护，当这样的子组件很多时，父组件中有大量和自己逻辑不相关的
+     *    代码，我们实际上只需要子组件中的部分值，至于这个值在子组件中如何变化我们并不关心，我们只需要最后获取数据即可，
+     *    useImperativeHandle赋予了我们获取子组件变量的能力，子组件只需要将外面需要的变量处理好了暴露出去即可。
+     * 
+     * */
+  </script>
+
+</body>
+
+</html>
