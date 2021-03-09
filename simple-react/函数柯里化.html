@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+
+<body>
+  <script>
+    //  function add(x,y){
+    //   return x+y
+    //  }
+    // const foo = function(x){
+    //   return function (y){
+    //     return x+y
+    //   }
+    // }
+    // const a = foo(1)(2)
+    // console.log('a: ', a);
+    // var add = function(num1, num2) {
+    //       return num1 + num2;
+    //   }
+
+    //   // 假设 sum 函数调用时，传入参数都是标准的数字
+    //   function curry(add, n) {
+    //      var count = 0,
+    //      arr = [];
+
+    //      return function reply(arg) {
+    //          arr.push(arg);
+
+    //          if ( ++count >= n) {
+    //              //这里也可以在外面定义变量，保存每次计算后结果
+    //              console.log('arr: ', arr);
+    //              return arr.reduce(function(p, c) {
+    //                  return p = add(p, c);
+    //              }, 0) 
+    //          } else {
+    //              return reply;
+    //          }
+    //      }
+    //   }
+    //   var sum = curry(add, 4);
+
+    //  const a = sum(4)(3)(2)(1)  // 10
+    //  console.log('a: ', a);
+    //   function curry(fn) {
+    //     var args = Array.prototype.slice.call(arguments,1);
+    //     console.log('args: ', args);
+    //     return function() {
+    //         var innerArgs = Array.prototype.slice.call(arguments);
+    //         var finalArgs = args.concat(innerArgs);
+    //         return fn.apply(null, finalArgs);
+    //     };
+    // }
+
+    // function add(num1, num2) {
+    //     return num1 + num2;
+    // }
+    // var curriedAdd = curry(add, 5);
+
+    // var curriedAdd2 = curry(add, 5, 12);
+
+    // alert(curriedAdd(3))    // 8
+    // alert(curriedAdd2())    // 17
+    function curry(func) {
+      console.log('func: ', func.prototype);
+
+      return function curried(...args) {
+        // console.log('args: ', args);
+        if (args.length >= func.length) {
+          return func.apply(this, args);
+        } else {
+          return function (...args2) {
+            return curried.apply(this, args.concat(args2));
+          }
+        }
+      };
+
+    }
+    function sum(a, b, c) {
+      return a + b + c;
+    }
+
+    let curriedSum = curry(sum);
+    // const a = curriedSum(1,2,3)
+    // console.log('a: ', a);
+    const b = curriedSum(1,2)(5)
+    // console.log('b: ', b);
+
+  </script>
+  <script>
+    // function cur(func){
+    //   return function a(...args){
+    //     if(args.length>=func.length){
+    //       return func.apply(this,args)
+    //     } else {
+    //       return function (...args2){
+    //         return a.apply(this,args.concat(args2))
+    //       }
+    //     }
+    //   }
+    // }
+
+    function test(func){
+      return function cur(...args){
+        if(args.length>=func.length){
+          return cur.apply(this,args)
+        } else {
+          return function (...args2){
+            return cur.apply(this,args.concat(args2))
+          }
+        }
+      }
+    }
+  </script>
+
+</body>
+
+</html>
+

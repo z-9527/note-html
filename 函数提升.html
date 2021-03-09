@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+
+<body>
+  <script>
+    /**
+     *  https://segmentfault.com/a/1190000008568071
+     *  https://www.cnblogs.com/liuhe688/p/5891273.html
+     *  var、函数声明都会在当前作用域中发生提升。
+     *  函数时一定公民，如果同时发生变量提升和函数提升，
+     *  函数提升要比变量提升的优先级要高一些，且不会被变量声明覆盖，但是会被变量赋值之后覆盖
+     * */
+    1.
+    var a = 2;
+    function a() {
+      console.log()
+    }
+    console.log(a)
+
+    //上面代码相当于
+    function a() {
+      console.log()
+    }
+    var a
+    a = 2
+    console.log(a)  // 2
+
+
+    2.
+    var a;
+    function a() {
+      console.log()
+    }
+    console.log(a)
+    // 上面代码相当于
+    function a() {
+      console.log()
+    }
+    var a
+    console.log(a) // function
+
+    3.
+    var foo = 3;
+    function hoistVariable() {
+      console.log(foo); 
+      var foo = 5;
+    }
+    // 上面相当于
+    var foo = 3;
+    function hoistVariable(){
+      var foo
+      console.log(foo)
+      foo = 5
+    }
+    // 为什么console.log()没打印出外面的变量3，因为函数内部foo有变量提升，当函数内部在沿作用域链寻找变量
+    // 时，在函数内部先找到了提示的变量，所以不会找到函数外部的foo
+
+
+
+  </script>
+</body>
+
+</html>
