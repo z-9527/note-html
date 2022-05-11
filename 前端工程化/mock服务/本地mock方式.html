@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <script>
+    /**
+     * 为了避免后端接口开发进度影响前端开发，一般和后端约定好接口后前端可以使用本地mock数据的方式进行开发
+     * mock的方式大概有4种
+     * 1.直接mock数据
+     *   通过mockjs直接在请求数据的地方使用mock数据
+     *   优点：简单   缺点：代码侵入性比较大，后期真实接口替换时改动较多
+     * 2.使用mockjs拦截请求
+     *   优点：代码侵入性小   缺点：mockjs拦截的是ajax请求，所以对使用fetch无效；network看不到发送的请求。
+     * 3.第三方在线mock工具
+     *   有点：代码侵入性小   缺点：需要自己去编写mock数据，不够灵活，还有学习第三方mock工具使用方法，可能收费
+     * 4.搭建本地mock服务器（类似umijs那种）
+     *   优点：代码侵入性基本没有,mock服务始终和项目在一起  缺点：稍微复杂一点
+     * 
+     * 
+     *   对于第四种方式，我们通过搭建本地服务器，然后利用本地服务器返回mock数据，这种方式完全模拟了后端接口，但是还是要解决几个问题
+     *   1.如何搭建本地服务器
+     *   2.如何编写mock数据
+     *   3.每新增一个接口或修改接口数据都要重启服务器吗
+     * 
+     *   对于第一个问题，我们脚手架一般都会有一个服务器，比如webpack的webpack-dev-server
+     *   我们可以专门创建一个mock文件夹，存放需要mock的接口如mockTest.js
+     *   mockTest.js如何和我们本地的webpack-dev-server联系起来？
+     *   在启动WDS时，通过WDS启动时的钩子我们可以遍历mock文件夹，然后添加文件夹中的接口到后端路由中。具体的方法参考webpack.config.js
+     *   上面解决了server启动时自动创建了mock接口，但是启动后新增或修改接口时，如何避免手动重启项目？
+     *   1.监听mock文件夹修改  
+     *   2.通过WDS提供的api重启服务 
+     *    
+     *    通过chokidar监听mock文件夹是否变化，有变化时重新调用WDS api重启服务（https://webpack.js.org/api/webpack-dev-server/#stopcallbackcallback）
+     *    虽然目前可以自动重启服务了，这种方式相当于重启项目，页面会有刷新的过程。如何能避免刷新？
+     *    既然新增接口路由这种方式避免不了重启server，那只能换种方式了。不走后端路由，通过监听所有路由，在路由里面根据url路径做不同的处理
+     *    这种方式又有几个问题，
+     *    1.拦截了所有请求，所以在没有匹配的get接口时要返回首页html
+     *    2.实时修改了mock接口数据，但是页面请求后接口并没有变化？因为缓存？
+     *    
+     *    对于修改了mock文件内容，但项目并没有重新编译，因为mock在前端代码中并没有任何地方引用
+     *    于是我在前端代码中手动引入mock中的文件，此时修改mock文件内容，项目重新编译了，但是接口内容并没有变化，为什么？
+     * 
+     *    猜测原因：webpack-dev-server将文件打包到内存中，此时修改mock文件的内容，文件名并没有变化，所以还是读取的内存中的mock，
+     *    此时新增文件或修改文件名则会读取最新的数据
+     *    经测试，fs.readFile读取文件内容是正确的，排除文件缓存问题。最后发现是通过require获取文件内容导致的缓存问题
+     *    终于找到这个问题原因，刚开始一直以为是webpack-dev-server有缓存操作，排查很久。最后才找到require的问题
+     * 
+     *  
+     *    编写一个mock中间件
+     * 
+     * /
+
+  </script>
+  
+</body>
+</html>
