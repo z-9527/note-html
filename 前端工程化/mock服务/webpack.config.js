@@ -103,3 +103,61 @@ app.get("*", function (req, res) {
 });
 
 
+
+
+function startCallback(){
+  if (isInteractive) {
+    clearConsole();
+  }
+
+  const watcher = chokidar.watch(path.join(process.cwd(), "mock")).on('change', () => {
+    console.log("checked dev-server proxy changes, restarting server");
+    devServer.stopCallback(() => {
+      watcher.close();
+      devServer.startCallback(startCallback);
+    });
+  });
+
+  if (env.raw.FAST_REFRESH && semver.lt(react.version, '16.10.0')) {
+    console.log(
+      chalk.yellow(
+        `Fast Refresh requires React 16.10 or higher. You are using React ${react.version}.`
+      )
+    );
+  }
+
+  console.log(chalk.cyan('Starting the development server...\n'));
+  openBrowser(urls.localUrlForBrowser);
+}
+
+devServer.startCallback(startCallback);
+
+
+
+
+// function startCallback(){
+//   if (isInteractive) {
+//     clearConsole();
+//   }
+
+//   const watcher = chokidar.watch(path.join(process.cwd(), "mock")).on('change', () => {
+//     console.log("checked dev-server proxy changes, restarting server");
+//     devServer.stopCallback(() => {
+//       watcher.close();
+//       devServer.startCallback(startCallback);
+//     });
+//   });
+
+//   if (env.raw.FAST_REFRESH && semver.lt(react.version, '16.10.0')) {
+//     console.log(
+//       chalk.yellow(
+//         `Fast Refresh requires React 16.10 or higher. You are using React ${react.version}.`
+//       )
+//     );
+//   }
+
+//   console.log(chalk.cyan('Starting the development server...\n'));
+//   openBrowser(urls.localUrlForBrowser);
+// }
+
+// devServer.startCallback(startCallback);

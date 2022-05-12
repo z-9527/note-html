@@ -34,6 +34,7 @@
      *   上面解决了server启动时自动创建了mock接口，但是启动后新增或修改接口时，如何避免手动重启项目？
      *   1.监听mock文件夹修改  
      *   2.通过WDS提供的api重启服务 
+     * 
      *    
      *    通过chokidar监听mock文件夹是否变化，有变化时重新调用WDS api重启服务（https://webpack.js.org/api/webpack-dev-server/#stopcallbackcallback）
      *    虽然目前可以自动重启服务了，这种方式相当于重启项目，页面会有刷新的过程。如何能避免刷新？
@@ -50,9 +51,18 @@
      *    经测试，fs.readFile读取文件内容是正确的，排除文件缓存问题。最后发现是通过require获取文件内容导致的缓存问题
      *    终于找到这个问题原因，刚开始一直以为是webpack-dev-server有缓存操作，排查很久。最后才找到require的问题
      * 
-     *  
-     *    编写一个mock中间件
+     *    
+     *    新的方式拦截了所有请求，所以在没有匹配的接口时要返回html，但webpack-dev-server是将前端打包到内存中的，node不能直接访问
+     *    html，怎么才能返回呢？
+     *    实际上我们可以通过编写一个中间件来实现一个mock服务，在没有匹配的接口时直接调用next即可
+     *    mockMiddleware
+     *    使用  app.use('*', mockMiddleware(options));
      * 
+     * 
+     *    看了一下json-server mock服务器，有一些缺点
+     *    它是以JSON的key作为接口路径的，导致一些多级接口路径不支持
+     *    返回的是json数据，不能写function逻辑
+     *    
      * /
 
   </script>
