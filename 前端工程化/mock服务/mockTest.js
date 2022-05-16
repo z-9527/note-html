@@ -13,26 +13,42 @@ module.exports = {
   // GET 可忽略
   "/api/users/1": { id: 1422 },
 
+  "/api/error": (req, res) => {
+    setTimeout(() => {
+      // 模拟接口报错
+      res.status(400).json({
+        error: "模拟接口报错",
+      });
+    }, 1000);
+  },
+
   // 支持mockjs和function,req和res参考express
-  "GET /api/list": (req, res) => {
+  'GET /api/list': (req, res) => {
+    const { pageSize = 10, pageIndex = 1 } = req.query;
+    const startIndex = (pageIndex - 1) * pageSize + 1;
     setTimeout(() => {
       res.send(
         Mock.mock({
           success: 444,
-          content: {
-            [`data|${req.query.pageSize || 10}`]: [
+          data: {
+            [`data|${pageSize}`]: [
               {
-                title: "@title",
-                "price|1000-4000": 400,
-                city: "@city",
-                name: "@name",
-                "status|+1": ["unpack", "mailed", "sending", "received"],
-                purchasePerson: "@csentence",
-                time: "@date",
-                id: "@id",
+                'id|+1': startIndex,
+                name: '@name',
+                'number|+1': startIndex,
+                title: '@title',
+                'price|1000-4000': 400,
+                city: '@city',
+                'age|20-30': 22,
+                address: `@county(true)`,
+                link: 'www.baidu.com',
+                column: 'column',
+                'status|+1': ['unpack', 'mailed', 'sending', 'received'],
+                purchasePerson: '@csentence',
+                time: '@date',
               },
             ],
-            count: 100,
+            total: 100,
           },
         })
       );
