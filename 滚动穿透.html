@@ -6,8 +6,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>滚动穿透问题</title>
   <style>
+    body{
+
+    }
     .wrapper {
       height: 1500px;
+
     }
 
     .anchor {
@@ -24,6 +28,7 @@
       transform: translate3d(-50%, -50%, 0);
       overflow: auto;
       display: none;
+
     }
 
     .box {
@@ -132,9 +137,9 @@
     }
 
 
-    dialog.addEventListener('touchstart', onTouchStart)
-    dialog.addEventListener('touchmove', onTouchMove)
-    dialog.addEventListener('touchend', onTouchEnd)
+    // dialog.addEventListener('touchstart', onTouchStart)
+    // dialog.addEventListener('touchmove', onTouchMove)
+    // dialog.addEventListener('touchend', onTouchEnd)
     let touch = null
     function onTouchStart(e) {
       const touches = e.touches[0]

@@ -85,31 +85,31 @@
         img.setAttribute('data-src', `./assets/imgs/cat.jpeg?index=${i}`) 
         frag.appendChild(div)
         div.appendChild(img)
-        observer.observe(img)
+        // observer.observe(img)
       }
       // document.body.appendChild(frag)
       document.getElementById('test').appendChild(frag)
     }
     init()
 
-    // function lazyload() {
-    //   const list = document.getElementsByTagName('img')
-    //   for (let item of list) {
-    //     const top = item.getBoundingClientRect().top
-    //     if (top >= 0 && top < window.innerHeight && item.className.includes('loading-img')) {
+    function lazyload() {
+      const list = document.getElementsByTagName('img')
+      for (let item of list) {
+        const top = item.getBoundingClientRect().top
+        if (top >= 0 && top < window.innerHeight && item.className.includes('loading-img')) {
 
-    //       const img = new Image()
-    //       img.src = item.dataset.src
-    //       img.onload = function () {
-    //         item.src = item.dataset.src
-    //         item.classList.remove('loading-img')
-    //       }
+          const img = new Image()
+          img.src = item.dataset.src
+          img.onload = function () {
+            item.src = item.dataset.src
+            item.classList.remove('loading-img')
+          }
 
-    //     }
-    //   }
-    // }
-    // window.onscroll = lazyload
-    // lazyload()
+        }
+      }
+    }
+    window.onscroll = lazyload
+    lazyload()
   </script>
 </body>
 
