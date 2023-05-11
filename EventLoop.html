@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+
+<body>
+  <script>
+    /**
+     * https://www.ruanyifeng.com/blog/2014/10/event-loop.html
+     * https://zhuanlan.zhihu.com/p/165149415
+     * js是单线程
+     * 既然js是单线程，那就不能同时执行多个任务，只能将任务排队执行，
+     * 如果有个任务耗时比较多（比如ajax），这种情况后面的任务都会被阻塞
+     * 为了防止这种情况，js将任务分为同步任务和异步任务去执行
+     * 
+     * 同步任务放入主栈中执行，异步任务放入任务队列中执行
+     * 异步任务又分为微任务和宏任务（任务队列可分为两个队列）
+     * 宏任务队列: ajax、setTimeout、setInterval、Dom监听、requestAnimationFrame等
+     * 微任务队列: Promise的then回调、 Mutation Observer、 Object.observe
+     * 微任务的执行优先级大于宏任务优先级
+     * 
+     * 
+     * 
+     * js任务执行过程
+     * 1.按顺序执行主栈中所有同步任务，遇到异步任务先跳过，将异步任务放入任务队列
+     * 2.所有同步任务执行完成后，观察任务队列中是否已经有结果的任务，执行任务队列中可执行的任务
+     * 3.优先执行微任务队列中的任务，微任务队列中所有可执行的任务执行完毕后，观察宏任务队列中是否有可执行的任务
+     * 4.执行宏任务，若宏任务执行的过程中，又有微任务可执行，则微任务插队执行
+     * 5.重复上述过程
+     * 
+     * 
+     * 
+     * 
+     **/
+
+
+    setTimeout(() => {
+      console.log(1);
+    }, 1000)
+
+    const a = new Promise((resolve) => {
+      console.log(2);
+      setTimeout(() => {
+        console.log(3);
+        resolve()
+      }, 1000)
+    })
+    a.then(res => {
+      console.log(4);
+    })
+    console.log(5);
+    Promise.resolve().then(res => {
+      console.log(6);
+      setTimeout(() => {
+        console.log(7);
+      })
+      console.log(8);
+    })
+    console.log(9);
+  </script>
+
+</body>
+
+</html>
