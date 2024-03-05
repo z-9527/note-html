@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+
+<body>
+  <script>
+    /**
+     * 
+     * es module设计思想是尽量静态化，也就是说代码的输入输出在代码编译的阶段就能确定（这和其它几种模块化的机制有本质的不同，其它的都是在代码运行时才能确定输出）
+     * 静态加载优势在于
+     * 1.代码可以在编译阶段做代码分析，比如像构建工具的揺数优化就是基于esModule，将没有用到的模块代码去除，实现按需打包
+     * 2.输入输出的实时性,import导入的都是最新的export值，没有缓存（require会有缓存）
+     * 3.import具有命令提升效果（变量可以在import前使用，因为import命令是编译阶段执行的，在代码运行之前）
+     * 
+     * 
+     * 正是因为设计的静态加载，所以es module有以下限制
+     * 1.import和export不能写在代码块里，条件代码块里只有运行才能确定
+     * 2.import的变量是只读的，不能在import时去修改引入的模块变量（输入输出要在静态加载时就要确定，而不是运行后还有修改）。修改基本类型数据时会直接报错，修改引用类型属性时不报错，但这会影响所有其它地方引入的值，所以最好是不要去修改import的变量值
+     * 
+     * 
+     * script标签的js是同步加载的，当浏览器遇到script标签时会停止渲染dom，等到script下载完后执行完再继续往下渲染。这样设计的目的是因为js有可能会去修改dom，所以这里是要等js执行完后再继续往下渲染
+     * 我们通过加defer和async可以改变script的渲染模式，渲染引擎遇到这两个命令，就会开始下载外部脚本，但不会等它下载和执行，而是直接执行后面的命令
+     * defer和async的区别：
+     * 1.defer要等到整个页面在内存中正常渲染结束（DOM 结构完全生成，以及其他脚本执行完成），才会执行；
+     * 2.async一旦下载完，渲染引擎就会中断渲染，执行这个脚本以后，再继续渲染。
+     * 一句话，defer是“渲染完再执行”，async是“下载完就执行”
+     * 
+     * 
+     * <script type="module" src="./foo.js">的渲染模式是和defer一样的
+     * 
+     * /
+  </script>
+
+</body>
+
+</html>
